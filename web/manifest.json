@@ -1,11 +1,11 @@
 {
-    "name": "anthropic_arena",
-    "short_name": "anthropic_arena",
+    "name": "Anthropic Arena",
+    "short_name": "Arena",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#0A0C10",
+    "theme_color": "#0A0C10",
+    "description": "Learn Anthropic skills as a game — levels, XP, streaks and a global leaderboard.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
