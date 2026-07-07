@@ -1,0 +1,31 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Course content: everyone can read, only admins (console/scripts) write.
+    match /courses/{document=**} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Player profiles: public read (leaderboard), owner-only write with a
+    // schema check so nobody can inflate arbitrary fields.
+    match /users/{uid} {
+      allow read: if true;
+      allow create, update: if request.auth != null
+        && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(
+             ['name', 'tag', 'provider', 'xp', 'streakDays',
+              'levelsCompleted', 'badges', 'updatedAt'])
+        && request.resource.data.name is string
+        && request.resource.data.name.size() <= 40
+        && request.resource.data.xp is int
+        && request.resource.data.xp >= 0;
+      allow delete: if request.auth != null && request.auth.uid == uid;
+
+      // Per-user attempt history (future sync).
+      match /attempts/{attemptId} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+      }
+    }
+  }
+}

@@ -293,7 +293,7 @@ class ProfileTab extends ConsumerWidget {
   }
 
   Future<void> _signOut(BuildContext context, WidgetRef ref) async {
-    ref.read(authProvider.notifier).signOut();
+    await ref.read(authProvider.notifier).signOut();
     if (context.mounted) {
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => const LoginScreen()),

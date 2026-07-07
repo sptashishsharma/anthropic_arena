@@ -1,6 +1,10 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart' as fb;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -21,6 +25,10 @@ import '../gamification/xp_rules.dart';
 final prefsProvider = Provider<SharedPreferences>(
   (ref) => throw UnimplementedError('Overridden in main()'),
 );
+
+/// True when Firebase.initializeApp succeeded (web today; Android/iOS after
+/// they're registered in the console). When false the app runs fully local.
+final firebaseReadyProvider = Provider<bool>((ref) => false);
 
 final contentRepositoryProvider =
     Provider<ContentRepository>((ref) => const AssetContentRepository());
@@ -58,6 +66,10 @@ final themeProvider =
 // Auth
 // ---------------------------------------------------------------------------
 
+/// Local-first auth. With Firebase available the same methods authenticate
+/// against Firebase Auth and mirror a profile document to Firestore; without
+/// it they create a device-local account. All methods return null on success
+/// or a human-readable error message.
 class AuthController extends Notifier<Player?> {
   static const _key = 'aa.player';
 
@@ -68,34 +80,138 @@ class AuthController extends Notifier<Player?> {
     return Player.fromJson((jsonDecode(raw) as Map).cast<String, dynamic>());
   }
 
-  Player _create({
+  bool get _firebase => ref.read(firebaseReadyProvider);
+
+  Player _store({
+    required String id,
     required String name,
     required AuthProvider provider,
     String? email,
   }) {
-    final now = DateTime.now();
-    final rng = Random(now.microsecondsSinceEpoch);
     final player = Player(
-      id: 'p${now.millisecondsSinceEpoch}${rng.nextInt(999)}',
+      id: id,
       name: name,
-      tag: '#${(1000 + rng.nextInt(9000))}',
+      tag: '#${1000 + (id.hashCode.abs() % 9000)}',
       provider: provider,
       email: email,
-      joinedIso: now.toIso8601String(),
+      joinedIso: DateTime.now().toIso8601String(),
     );
     ref.read(prefsProvider).setString(_key, jsonEncode(player.toJson()));
     state = player;
+    _mirrorProfile(player);
     return player;
   }
 
-  void signInGuest() => _create(name: 'Player', provider: AuthProvider.guest);
+  Player _storeLocal({
+    required String name,
+    required AuthProvider provider,
+    String? email,
+  }) {
+    final rng = Random(DateTime.now().microsecondsSinceEpoch);
+    return _store(
+      id: 'p${DateTime.now().millisecondsSinceEpoch}${rng.nextInt(999)}',
+      name: name,
+      provider: provider,
+      email: email,
+    );
+  }
 
-  void signInEmail({required String name, required String email}) =>
-      _create(name: name, provider: AuthProvider.email, email: email);
+  /// Pushes the public profile to Firestore so the leaderboard can see it.
+  void _mirrorProfile(Player player) {
+    if (!_firebase) return;
+    final progress = ref.read(progressProvider);
+    unawaited(FirebaseFirestore.instance
+        .collection('users')
+        .doc(player.id)
+        .set({
+          'name': player.name,
+          'tag': player.tag,
+          'provider': player.provider.name,
+          'xp': progress.xp,
+          'streakDays': progress.streakDays,
+          'levelsCompleted': progress.levelsCompleted,
+          'badges': progress.badges.length,
+          'updatedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true))
+        .catchError((_) {}));
+  }
 
-  /// Demo sign-in for Google/Apple until Firebase Auth is connected.
-  void signInDemoProvider(AuthProvider provider, {required String name}) =>
-      _create(name: name, provider: provider);
+  Future<String?> signInGuest() async {
+    if (_firebase) {
+      try {
+        final cred = await fb.FirebaseAuth.instance.signInAnonymously();
+        _store(id: cred.user!.uid, name: 'Player', provider: AuthProvider.guest);
+        return null;
+      } on fb.FirebaseAuthException catch (e) {
+        return _friendly(e);
+      }
+    }
+    _storeLocal(name: 'Player', provider: AuthProvider.guest);
+    return null;
+  }
+
+  Future<String?> signInEmail({
+    required String name,
+    required String email,
+    required String password,
+  }) async {
+    if (_firebase) {
+      final auth = fb.FirebaseAuth.instance;
+      try {
+        fb.UserCredential cred;
+        try {
+          cred = await auth.createUserWithEmailAndPassword(
+              email: email, password: password);
+        } on fb.FirebaseAuthException catch (e) {
+          if (e.code == 'email-already-in-use') {
+            cred = await auth.signInWithEmailAndPassword(
+                email: email, password: password);
+          } else {
+            rethrow;
+          }
+        }
+        unawaited(cred.user?.updateDisplayName(name));
+        _store(
+            id: cred.user!.uid,
+            name: name,
+            provider: AuthProvider.email,
+            email: email);
+        return null;
+      } on fb.FirebaseAuthException catch (e) {
+        return _friendly(e);
+      }
+    }
+    _storeLocal(name: name, provider: AuthProvider.email, email: email);
+    return null;
+  }
+
+  /// Real Google popup on web; demo account elsewhere until those platforms
+  /// are registered with Firebase.
+  Future<String?> signInGoogle() async {
+    if (_firebase && kIsWeb) {
+      try {
+        final cred = await fb.FirebaseAuth.instance
+            .signInWithPopup(fb.GoogleAuthProvider());
+        final user = cred.user!;
+        _store(
+          id: user.uid,
+          name: user.displayName ?? 'Player',
+          provider: AuthProvider.google,
+          email: user.email,
+        );
+        return null;
+      } on fb.FirebaseAuthException catch (e) {
+        return _friendly(e);
+      }
+    }
+    _storeLocal(name: 'Google Player', provider: AuthProvider.google);
+    return null;
+  }
+
+  Future<String?> signInDemoApple() async {
+    _storeLocal(name: 'Apple Player', provider: AuthProvider.apple);
+    return null;
+  }
 
   void rename(String name) {
     final current = state;
@@ -103,12 +219,39 @@ class AuthController extends Notifier<Player?> {
     final updated = current.copyWith(name: name);
     ref.read(prefsProvider).setString(_key, jsonEncode(updated.toJson()));
     state = updated;
+    _mirrorProfile(updated);
   }
 
-  void signOut() {
+  /// Called by ProgressController after every attempt so the leaderboard
+  /// stays current.
+  void syncProgress() {
+    final current = state;
+    if (current != null) _mirrorProfile(current);
+  }
+
+  Future<void> signOut() async {
+    if (_firebase) {
+      try {
+        await fb.FirebaseAuth.instance.signOut();
+      } catch (_) {}
+    }
     ref.read(prefsProvider).remove(_key);
     state = null;
   }
+
+  static String _friendly(fb.FirebaseAuthException e) => switch (e.code) {
+        'invalid-credential' ||
+        'wrong-password' =>
+          'Wrong password for that email. Try again.',
+        'invalid-email' => 'That email address doesn\'t look right.',
+        'weak-password' => 'Password too weak — use at least 6 characters.',
+        'user-disabled' => 'This account has been disabled.',
+        'popup-closed-by-user' => 'Sign-in window was closed. Try again.',
+        'operation-not-allowed' =>
+          'This sign-in method isn\'t enabled in Firebase yet.',
+        'network-request-failed' => 'No connection — check your internet.',
+        _ => 'Sign-in failed (${e.code}). Please try again.',
+      };
 }
 
 final authProvider = NotifierProvider<AuthController, Player?>(
@@ -261,6 +404,8 @@ class ProgressController extends Notifier<UserProgress> {
 
     state = next;
     _persist();
+    // Keep the global leaderboard in sync (no-op without Firebase).
+    ref.read(authProvider.notifier).syncProgress();
 
     return AttemptOutcome(
       scorePct: scorePct,
@@ -286,6 +431,7 @@ class ProgressController extends Notifier<UserProgress> {
   void resetAll() {
     state = const UserProgress();
     ref.read(prefsProvider).remove(_key);
+    ref.read(authProvider.notifier).syncProgress();
   }
 
   void _persist() =>
@@ -300,18 +446,52 @@ final progressProvider = NotifierProvider<ProgressController, UserProgress>(
 // Leaderboard
 // ---------------------------------------------------------------------------
 
+/// Live Firestore standings: top 50 players by XP.
+final _liveLeaderboardProvider = StreamProvider<List<LeaderboardEntry>>((ref) {
+  final player = ref.watch(authProvider);
+  return FirebaseFirestore.instance
+      .collection('users')
+      .orderBy('xp', descending: true)
+      .limit(50)
+      .snapshots()
+      .map((snap) => [
+            for (final doc in snap.docs)
+              LeaderboardEntry(
+                name: (doc.data()['name'] as String?) ?? 'Player',
+                tag: (doc.data()['tag'] as String?) ?? '',
+                xp: (doc.data()['xp'] as num?)?.toInt() ?? 0,
+                isYou: doc.id == player?.id,
+              ),
+          ]);
+});
+
+/// What the Ranking tab shows: live standings when Firebase is on,
+/// demo standings otherwise.
 final leaderboardProvider = Provider<List<LeaderboardEntry>>((ref) {
   final player = ref.watch(authProvider);
   final progress = ref.watch(progressProvider);
-  final entries = [
+
+  if (ref.watch(firebaseReadyProvider)) {
+    final live = ref.watch(_liveLeaderboardProvider).value ?? const [];
+    // Make sure the local player is visible even before their first sync.
+    if (player != null && !live.any((e) => e.isYou)) {
+      return [
+        ...live,
+        LeaderboardEntry(
+            name: player.name, tag: player.tag, xp: progress.xp, isYou: true),
+      ]..sort((a, b) => b.xp.compareTo(a.xp));
+    }
+    return live;
+  }
+
+  return [
     ...demoRivals,
     if (player != null)
       LeaderboardEntry(
-        name: player.name,
-        tag: player.tag,
-        xp: progress.xp,
-        isYou: true,
-      ),
+          name: player.name, tag: player.tag, xp: progress.xp, isYou: true),
   ]..sort((a, b) => b.xp.compareTo(a.xp));
-  return entries;
 });
+
+/// True when the standings shown are the live global ones.
+final leaderboardIsLiveProvider =
+    Provider<bool>((ref) => ref.watch(firebaseReadyProvider));

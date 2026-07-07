@@ -12,8 +12,10 @@ class RankingTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final entries = ref.watch(leaderboardProvider);
-    final top3 = entries.take(3).toList();
-    final rest = entries.skip(3).toList();
+    final isLive = ref.watch(leaderboardIsLiveProvider);
+    final hasPodium = entries.length >= 3;
+    final top3 = hasPodium ? entries.take(3).toList() : <LeaderboardEntry>[];
+    final rest = hasPodium ? entries.skip(3).toList() : entries;
     final textTheme = Theme.of(context).textTheme;
 
     return SafeArea(
@@ -23,12 +25,14 @@ class RankingTab extends ConsumerWidget {
           Text('Ranking', style: textTheme.headlineMedium),
           const SizedBox(height: 4),
           Text(
-            'Demo standings — the global arena goes live with Firebase.',
+            isLive
+                ? 'Global leaderboard — live. Play levels to climb!'
+                : 'Demo standings — the global arena goes live with Firebase.',
             style: textTheme.bodySmall?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant),
           ),
           const SizedBox(height: 24),
-          if (top3.length >= 3)
+          if (hasPodium)
             SizedBox(
               height: 216,
               child: Row(
@@ -59,7 +63,7 @@ class RankingTab extends ConsumerWidget {
             ),
           const SizedBox(height: 20),
           for (var i = 0; i < rest.length; i++) ...[
-            _RankRow(entry: rest[i], rank: i + 4),
+            _RankRow(entry: rest[i], rank: i + (hasPodium ? 4 : 1)),
             const SizedBox(height: 8),
           ],
         ],
