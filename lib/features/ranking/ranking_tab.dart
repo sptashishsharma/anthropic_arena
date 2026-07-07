@@ -30,7 +30,7 @@ class RankingTab extends ConsumerWidget {
           const SizedBox(height: 24),
           if (top3.length >= 3)
             SizedBox(
-              height: 200,
+              height: 216,
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
@@ -38,21 +38,21 @@ class RankingTab extends ConsumerWidget {
                       child: _PodiumSpot(
                           entry: top3[1],
                           place: 2,
-                          height: 132,
+                          height: 152,
                           color: AppColors.silver)),
                   const SizedBox(width: 10),
                   Expanded(
                       child: _PodiumSpot(
                           entry: top3[0],
                           place: 1,
-                          height: 168,
+                          height: 184,
                           color: AppColors.gold)),
                   const SizedBox(width: 10),
                   Expanded(
                       child: _PodiumSpot(
                           entry: top3[2],
                           place: 3,
-                          height: 110,
+                          height: 132,
                           color: AppColors.bronze)),
                 ],
               ),

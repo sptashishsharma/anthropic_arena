@@ -35,8 +35,6 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
   Question get _current => _questions[_index];
   int? get _selected => _answers[_current.id];
   bool get _isLast => _index == _questions.length - 1;
-  int get _answeredCount =>
-      _answers.values.where((v) => v != null).length;
 
   void _select(int option) =>
       setState(() => _answers[_current.id] = option);
@@ -221,10 +219,16 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
                     padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
                     child: Row(
                       children: [
-                        Expanded(
+                        SizedBox(
+                          width: 56,
                           child: OutlinedButton(
                             onPressed: _index > 0 ? _goPrevious : null,
-                            child: const Text('Previous'),
+                            style: OutlinedButton.styleFrom(
+                                padding: EdgeInsets.zero),
+                            child: const Tooltip(
+                              message: 'Previous question',
+                              child: Icon(Icons.arrow_back_rounded, size: 20),
+                            ),
                           ),
                         ),
                         const SizedBox(width: 10),
@@ -239,9 +243,7 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
                           flex: 2,
                           child: FilledButton(
                             onPressed: _selected != null ? _next : null,
-                            child: Text(_isLast
-                                ? 'Finish (${_answeredCount + (_selected != null && !_answers.containsKey(_current.id) ? 1 : 0)}/${_questions.length})'
-                                : 'Next'),
+                            child: Text(_isLast ? 'Finish' : 'Next'),
                           ),
                         ),
                       ],
