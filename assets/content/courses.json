@@ -1,0 +1,645 @@
+{
+  "version": 1,
+  "courses": [
+    {
+      "id": "claude-foundations",
+      "title": "Claude Foundations",
+      "tagline": "What Claude is and what it can do",
+      "description": "Start here. Learn what Claude is, the model family, and the core ideas behind safe, helpful AI.",
+      "order": 1,
+      "color": "#F5A623",
+      "levels": [
+        {
+          "id": "cf-l1",
+          "title": "Meet Claude",
+          "order": 1,
+          "topic": "Claude Basics",
+          "passMark": 70,
+          "xpPerCorrect": 10,
+          "questions": [
+            {
+              "id": "cf-l1-q1",
+              "topic": "Claude Basics",
+              "question": "What is Claude?",
+              "options": [
+                "A search engine for websites",
+                "An AI assistant made by Anthropic",
+                "A programming language",
+                "A social media platform"
+              ],
+              "correctIndex": 1,
+              "explanation": "Claude is a family of AI assistants created by Anthropic, designed to be helpful, honest, and harmless.",
+              "resource": { "title": "About Claude", "url": "https://www.anthropic.com/claude" }
+            },
+            {
+              "id": "cf-l1-q2",
+              "topic": "Claude Basics",
+              "question": "Which company builds Claude?",
+              "options": ["Google", "OpenAI", "Anthropic", "Microsoft"],
+              "correctIndex": 2,
+              "explanation": "Anthropic is an AI safety company and the maker of the Claude model family.",
+              "resource": { "title": "Anthropic", "url": "https://www.anthropic.com" }
+            },
+            {
+              "id": "cf-l1-q3",
+              "topic": "Claude Basics",
+              "question": "Claude is designed around three core values. Which set is correct?",
+              "options": [
+                "Fast, cheap, simple",
+                "Helpful, honest, harmless",
+                "Big, bold, brave",
+                "Private, public, shared"
+              ],
+              "correctIndex": 1,
+              "explanation": "Anthropic designs Claude to be helpful, honest, and harmless — often called the three H's.",
+              "resource": { "title": "Anthropic's approach to safety", "url": "https://www.anthropic.com/safety" }
+            },
+            {
+              "id": "cf-l1-q4",
+              "topic": "Claude Basics",
+              "question": "Which of these can Claude help you do?",
+              "options": [
+                "Write and edit text",
+                "Analyse documents and data",
+                "Write and explain code",
+                "All of the above"
+              ],
+              "correctIndex": 3,
+              "explanation": "Claude is a general-purpose assistant: writing, analysis, coding, summarising, brainstorming and more.",
+              "resource": { "title": "Claude use cases", "url": "https://www.anthropic.com/claude" }
+            },
+            {
+              "id": "cf-l1-q5",
+              "topic": "Claude Basics",
+              "question": "How do you interact with Claude in a chat?",
+              "options": [
+                "By writing prompts in natural language",
+                "Only by uploading spreadsheets",
+                "Only through program code",
+                "By recording video messages"
+              ],
+              "correctIndex": 0,
+              "explanation": "You talk to Claude in plain language. Clear, specific prompts get the best results.",
+              "resource": { "title": "Getting started with Claude", "url": "https://support.anthropic.com" }
+            }
+          ]
+        },
+        {
+          "id": "cf-l2",
+          "title": "The Model Family",
+          "order": 2,
+          "topic": "Model Family",
+          "passMark": 70,
+          "xpPerCorrect": 10,
+          "questions": [
+            {
+              "id": "cf-l2-q1",
+              "topic": "Model Family",
+              "question": "Which Claude model tier is optimised for speed and efficiency?",
+              "options": ["Opus", "Sonnet", "Haiku", "Fable"],
+              "correctIndex": 2,
+              "explanation": "Haiku is the fastest, most lightweight tier — great for quick, high-volume tasks.",
+              "resource": { "title": "Claude models", "url": "https://www.anthropic.com/claude" }
+            },
+            {
+              "id": "cf-l2-q2",
+              "topic": "Model Family",
+              "question": "For deep reasoning on the hardest problems, which classic tier would you pick?",
+              "options": ["Haiku", "Opus", "Mini", "Nano"],
+              "correctIndex": 1,
+              "explanation": "Opus is the high-capability tier for complex, multi-step reasoning tasks.",
+              "resource": { "title": "Choosing a model", "url": "https://docs.claude.com" }
+            },
+            {
+              "id": "cf-l2-q3",
+              "topic": "Model Family",
+              "question": "What is a 'context window'?",
+              "options": [
+                "The chat app's settings page",
+                "How much text the model can consider at once",
+                "The time a session stays open",
+                "A pop-up in the interface"
+              ],
+              "correctIndex": 1,
+              "explanation": "The context window is the amount of conversation and documents the model can hold in mind at one time.",
+              "resource": { "title": "Context windows", "url": "https://docs.claude.com" }
+            },
+            {
+              "id": "cf-l2-q4",
+              "topic": "Model Family",
+              "question": "A 'token' is best described as…",
+              "options": [
+                "A password for logging in",
+                "A small chunk of text the model reads or writes",
+                "A payment method",
+                "An error message"
+              ],
+              "correctIndex": 1,
+              "explanation": "Models process text as tokens — pieces of words. Costs and limits are usually measured in tokens.",
+              "resource": { "title": "Glossary", "url": "https://docs.claude.com" }
+            },
+            {
+              "id": "cf-l2-q5",
+              "topic": "Model Family",
+              "question": "Claude can work with images in a conversation. This ability is called…",
+              "options": ["Vision", "Streaming", "Caching", "Sampling"],
+              "correctIndex": 0,
+              "explanation": "Vision lets Claude read screenshots, photos, charts and diagrams you attach.",
+              "resource": { "title": "Vision", "url": "https://docs.claude.com" }
+            }
+          ]
+        },
+        {
+          "id": "cf-l3",
+          "title": "Safe & Responsible AI",
+          "order": 3,
+          "topic": "AI Safety",
+          "passMark": 70,
+          "xpPerCorrect": 10,
+          "questions": [
+            {
+              "id": "cf-l3-q1",
+              "topic": "AI Safety",
+              "question": "What is an AI 'hallucination'?",
+              "options": [
+                "A confident answer that is actually wrong or made up",
+                "A crash in the app",
+                "A slow response",
+                "A repeated answer"
+              ],
+              "correctIndex": 0,
+              "explanation": "Models can state incorrect things confidently. Always verify important facts from primary sources.",
+              "resource": { "title": "Reducing hallucinations", "url": "https://docs.claude.com" }
+            },
+            {
+              "id": "cf-l3-q2",
+              "topic": "AI Safety",
+              "question": "What is the safest habit when Claude gives you a critical fact or figure?",
+              "options": [
+                "Share it immediately",
+                "Verify it against a trusted source",
+                "Assume it is always correct",
+                "Ask the same question again"
+              ],
+              "correctIndex": 1,
+              "explanation": "Treat model output as a strong draft, not ground truth — verify anything high-stakes.",
+              "resource": { "title": "Working with AI responsibly", "url": "https://www.anthropic.com/safety" }
+            },
+            {
+              "id": "cf-l3-q3",
+              "topic": "AI Safety",
+              "question": "'Constitutional AI' refers to…",
+              "options": [
+                "Training AI using a written set of principles",
+                "A government regulation",
+                "A hardware standard",
+                "An encryption method"
+              ],
+              "correctIndex": 0,
+              "explanation": "Anthropic trains Claude with a 'constitution' — explicit principles that guide safe, helpful behaviour.",
+              "resource": { "title": "Constitutional AI", "url": "https://www.anthropic.com/research" }
+            },
+            {
+              "id": "cf-l3-q4",
+              "topic": "AI Safety",
+              "question": "Which of these should you avoid pasting into any AI chat at work?",
+              "options": [
+                "A public news article",
+                "Sensitive customer data without approval",
+                "A general knowledge question",
+                "A draft of a public blog post"
+              ],
+              "correctIndex": 1,
+              "explanation": "Follow your organisation's data policy — keep confidential and personal data out of tools that aren't approved for it.",
+              "resource": { "title": "Privacy at Anthropic", "url": "https://www.anthropic.com/legal/privacy" }
+            },
+            {
+              "id": "cf-l3-q5",
+              "topic": "AI Safety",
+              "question": "If Claude refuses a request, the best next step is to…",
+              "options": [
+                "Rephrase honestly and explain your legitimate goal",
+                "Trick it with a workaround",
+                "Spam the same request",
+                "Report it as broken"
+              ],
+              "correctIndex": 0,
+              "explanation": "Explaining your real intent and context usually helps Claude assist safely and accurately.",
+              "resource": { "title": "Usage policies", "url": "https://www.anthropic.com/legal/aup" }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "prompting-mastery",
+      "title": "Prompting Mastery",
+      "tagline": "Get dramatically better answers",
+      "description": "Learn the craft of writing prompts: clarity, context, examples, structure, and iteration.",
+      "order": 2,
+      "color": "#4FC3F7",
+      "levels": [
+        {
+          "id": "pm-l1",
+          "title": "Clear Instructions",
+          "order": 1,
+          "topic": "Prompting Basics",
+          "passMark": 70,
+          "xpPerCorrect": 10,
+          "questions": [
+            {
+              "id": "pm-l1-q1",
+              "topic": "Prompting Basics",
+              "question": "Which prompt will get the best result?",
+              "options": [
+                "\"Write something about dogs\"",
+                "\"Write a 100-word friendly intro about beagles for a pet-shop newsletter\"",
+                "\"Dogs?\"",
+                "\"Write a lot about all animals\""
+              ],
+              "correctIndex": 1,
+              "explanation": "Specific prompts — audience, length, tone, topic — consistently beat vague ones.",
+              "resource": { "title": "Be clear and direct", "url": "https://docs.claude.com" }
+            },
+            {
+              "id": "pm-l1-q2",
+              "topic": "Prompting Basics",
+              "question": "What is the 'golden rule' of prompting?",
+              "options": [
+                "Keep every prompt under ten words",
+                "If a colleague would be confused by your request, the model will be too",
+                "Always use technical jargon",
+                "Never give background information"
+              ],
+              "correctIndex": 1,
+              "explanation": "Show your prompt to a colleague: if they can't follow it, neither can the model. Write for a smart newcomer.",
+              "resource": { "title": "Prompt engineering overview", "url": "https://docs.claude.com" }
+            },
+            {
+              "id": "pm-l1-q3",
+              "topic": "Prompting Basics",
+              "question": "Why does giving context improve answers?",
+              "options": [
+                "It makes the reply longer",
+                "The model tailors its answer to your situation and goal",
+                "It slows the model down",
+                "It doesn't — context is ignored"
+              ],
+              "correctIndex": 1,
+              "explanation": "Purpose, audience, and constraints let the model choose the right content, tone and depth.",
+              "resource": { "title": "Give Claude context", "url": "https://docs.claude.com" }
+            },
+            {
+              "id": "pm-l1-q4",
+              "topic": "Prompting Basics",
+              "question": "You want the answer as a table. What should you do?",
+              "options": [
+                "Hope the model guesses",
+                "Say so explicitly: \"Present the result as a table with columns X and Y\"",
+                "Ask twice",
+                "Use all capital letters"
+              ],
+              "correctIndex": 1,
+              "explanation": "State the output format you want — lists, tables, JSON, word counts. The model follows explicit format requests.",
+              "resource": { "title": "Control output format", "url": "https://docs.claude.com" }
+            },
+            {
+              "id": "pm-l1-q5",
+              "topic": "Prompting Basics",
+              "question": "Your first answer isn't quite right. The best move is to…",
+              "options": [
+                "Give up",
+                "Tell the model what to change and iterate",
+                "Start a brand-new unrelated chat",
+                "Repeat the identical prompt"
+              ],
+              "correctIndex": 1,
+              "explanation": "Prompting is iterative: give feedback ('shorter', 'more formal', 'add examples') and refine.",
+              "resource": { "title": "Iterating on prompts", "url": "https://docs.claude.com" }
+            }
+          ]
+        },
+        {
+          "id": "pm-l2",
+          "title": "Examples & Roles",
+          "order": 2,
+          "topic": "Prompting Techniques",
+          "passMark": 70,
+          "xpPerCorrect": 10,
+          "questions": [
+            {
+              "id": "pm-l2-q1",
+              "topic": "Prompting Techniques",
+              "question": "Showing the model 2–3 examples of the output you want is called…",
+              "options": ["Zero-shot prompting", "Few-shot prompting", "Overfitting", "Fine-tuning"],
+              "correctIndex": 1,
+              "explanation": "Few-shot prompting — including worked examples — is one of the most reliable ways to shape output.",
+              "resource": { "title": "Use examples", "url": "https://docs.claude.com" }
+            },
+            {
+              "id": "pm-l2-q2",
+              "topic": "Prompting Techniques",
+              "question": "\"You are an experienced HR manager reviewing this policy…\" is an example of…",
+              "options": ["Role prompting", "Data cleaning", "Token counting", "Caching"],
+              "correctIndex": 0,
+              "explanation": "Assigning a role focuses the model's expertise, tone and point of view.",
+              "resource": { "title": "Role prompting", "url": "https://docs.claude.com" }
+            },
+            {
+              "id": "pm-l2-q3",
+              "topic": "Prompting Techniques",
+              "question": "Asking the model to 'think step by step' before answering helps because…",
+              "options": [
+                "It makes answers shorter",
+                "Working through reasoning first improves accuracy on complex problems",
+                "It disables safety rules",
+                "It saves tokens"
+              ],
+              "correctIndex": 1,
+              "explanation": "Chain-of-thought prompting gives the model room to reason before committing to an answer.",
+              "resource": { "title": "Chain of thought", "url": "https://docs.claude.com" }
+            },
+            {
+              "id": "pm-l2-q4",
+              "topic": "Prompting Techniques",
+              "question": "When pasting a long document to analyse, a good practice is to…",
+              "options": [
+                "Put your instructions after/around clearly separated document text",
+                "Mix instructions randomly inside the document",
+                "Remove all punctuation first",
+                "Split it into 50 separate chats"
+              ],
+              "correctIndex": 0,
+              "explanation": "Separate data from instructions (e.g. with headings or XML-style tags) so the model knows what is content vs. command.",
+              "resource": { "title": "Structure long prompts", "url": "https://docs.claude.com" }
+            },
+            {
+              "id": "pm-l2-q5",
+              "topic": "Prompting Techniques",
+              "question": "Which request best 'prefills' the answer style you want?",
+              "options": [
+                "\"Answer as bullet points starting each with a verb\"",
+                "\"Answer however you like\"",
+                "\"Be creative\"",
+                "\"You decide the format\""
+              ],
+              "correctIndex": 0,
+              "explanation": "Prescribing the opening style or skeleton of the answer strongly steers the result.",
+              "resource": { "title": "Prefill techniques", "url": "https://docs.claude.com" }
+            }
+          ]
+        },
+        {
+          "id": "pm-l3",
+          "title": "Real-World Workflows",
+          "order": 3,
+          "topic": "Applied Prompting",
+          "passMark": 70,
+          "xpPerCorrect": 10,
+          "questions": [
+            {
+              "id": "pm-l3-q1",
+              "topic": "Applied Prompting",
+              "question": "You need to summarise a 40-page report for executives. The best prompt includes…",
+              "options": [
+                "\"Summarise this\"",
+                "Audience, length, focus areas, and the format you need",
+                "Just the report with no instructions",
+                "A request to rewrite the whole report"
+              ],
+              "correctIndex": 1,
+              "explanation": "\"Summarise for the exec team in 5 bullet points focused on cost and risk\" beats a bare 'summarise'.",
+              "resource": { "title": "Summarisation tips", "url": "https://docs.claude.com" }
+            },
+            {
+              "id": "pm-l3-q2",
+              "topic": "Applied Prompting",
+              "question": "For brainstorming, which technique yields the most useful ideas?",
+              "options": [
+                "Ask for one idea only",
+                "Ask for many varied ideas with constraints, then iterate on the best",
+                "Ask for ideas without any topic",
+                "Ask the model to decide everything"
+              ],
+              "correctIndex": 1,
+              "explanation": "Quantity plus constraints ('10 ideas, each under 15 words, for a B2B audience') then refine the winners.",
+              "resource": { "title": "Brainstorming with Claude", "url": "https://docs.claude.com" }
+            },
+            {
+              "id": "pm-l3-q3",
+              "topic": "Applied Prompting",
+              "question": "You're drafting an email in a delicate situation. What extra context helps most?",
+              "options": [
+                "Your relationship to the reader and the outcome you want",
+                "Your favourite colour",
+                "The weather",
+                "Nothing — keep it minimal"
+              ],
+              "correctIndex": 0,
+              "explanation": "Relationship, history, tone and desired outcome let the model hit the right register.",
+              "resource": { "title": "Writing with Claude", "url": "https://docs.claude.com" }
+            },
+            {
+              "id": "pm-l3-q4",
+              "topic": "Applied Prompting",
+              "question": "The model's draft contains a factual claim you'll publish. You should…",
+              "options": [
+                "Publish immediately",
+                "Ask the model to cite sources and verify them yourself",
+                "Delete the whole draft",
+                "Assume it's correct because it sounds confident"
+              ],
+              "correctIndex": 1,
+              "explanation": "For public content, check claims against reliable sources — the author is still you.",
+              "resource": { "title": "Verify AI output", "url": "https://docs.claude.com" }
+            },
+            {
+              "id": "pm-l3-q5",
+              "topic": "Applied Prompting",
+              "question": "Which is a good 'meta' habit to improve your prompting over time?",
+              "options": [
+                "Keep a library of prompts that worked well for you",
+                "Never reuse anything",
+                "Always write prompts from scratch at random",
+                "Avoid reading model answers fully"
+              ],
+              "correctIndex": 0,
+              "explanation": "Saving and refining your best prompts builds a personal toolkit that compounds.",
+              "resource": { "title": "Prompt library", "url": "https://docs.claude.com" }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "claude-at-work",
+      "title": "Claude at Work",
+      "tagline": "Projects, files, tools & teamwork",
+      "description": "Use Claude's power features: projects, artifacts, file analysis, connectors and coding help.",
+      "order": 3,
+      "color": "#81C784",
+      "levels": [
+        {
+          "id": "cw-l1",
+          "title": "Files & Analysis",
+          "order": 1,
+          "topic": "Power Features",
+          "passMark": 70,
+          "xpPerCorrect": 10,
+          "questions": [
+            {
+              "id": "cw-l1-q1",
+              "topic": "Power Features",
+              "question": "Claude can read files you attach. Which of these is a typical use?",
+              "options": [
+                "Summarising a PDF contract",
+                "Extracting a table from a spreadsheet",
+                "Answering questions about a slide deck",
+                "All of the above"
+              ],
+              "correctIndex": 3,
+              "explanation": "Attach PDFs, spreadsheets, docs and images and ask questions, request summaries or transformations.",
+              "resource": { "title": "File uploads", "url": "https://support.anthropic.com" }
+            },
+            {
+              "id": "cw-l1-q2",
+              "topic": "Power Features",
+              "question": "What is an 'Artifact' in the Claude app?",
+              "options": [
+                "A bug in the interface",
+                "A separate live document/preview Claude creates alongside chat (code, docs, designs)",
+                "A saved password",
+                "A type of error log"
+              ],
+              "correctIndex": 1,
+              "explanation": "Artifacts are standalone outputs — documents, code, diagrams, mini-apps — shown next to the conversation.",
+              "resource": { "title": "Artifacts", "url": "https://support.anthropic.com" }
+            },
+            {
+              "id": "cw-l1-q3",
+              "topic": "Power Features",
+              "question": "'Projects' in Claude are useful because they…",
+              "options": [
+                "Hold shared context, files and instructions for ongoing work",
+                "Make Claude respond in emoji only",
+                "Replace your file system",
+                "Are required for every chat"
+              ],
+              "correctIndex": 0,
+              "explanation": "A project keeps documents and custom instructions attached so every chat starts informed.",
+              "resource": { "title": "Projects", "url": "https://support.anthropic.com" }
+            },
+            {
+              "id": "cw-l1-q4",
+              "topic": "Power Features",
+              "question": "When asking Claude to analyse data, the best first step is to…",
+              "options": [
+                "Describe what the data is and what decision you're trying to make",
+                "Paste data with no explanation",
+                "Ask for 'insights' with no goal",
+                "Convert everything to screenshots"
+              ],
+              "correctIndex": 0,
+              "explanation": "Framing the decision ('which region should we invest in?') turns generic stats into useful analysis.",
+              "resource": { "title": "Data analysis", "url": "https://support.anthropic.com" }
+            },
+            {
+              "id": "cw-l1-q5",
+              "topic": "Power Features",
+              "question": "Claude for coding can…",
+              "options": [
+                "Explain unfamiliar code",
+                "Write new functions and tests",
+                "Help debug an error message",
+                "All of the above"
+              ],
+              "correctIndex": 3,
+              "explanation": "From explaining to writing to debugging — describe the goal and share the relevant code or error.",
+              "resource": { "title": "Claude Code", "url": "https://claude.com/claude-code" }
+            }
+          ]
+        },
+        {
+          "id": "cw-l2",
+          "title": "Teamwork & Habits",
+          "order": 2,
+          "topic": "Working Habits",
+          "passMark": 70,
+          "xpPerCorrect": 10,
+          "questions": [
+            {
+              "id": "cw-l2-q1",
+              "topic": "Working Habits",
+              "question": "Which task is Claude LEAST suited for without human review?",
+              "options": [
+                "Drafting a brainstorm list",
+                "Final legal advice for a contract dispute",
+                "Rewording a paragraph",
+                "Explaining a concept"
+              ],
+              "correctIndex": 1,
+              "explanation": "High-stakes legal, medical or financial decisions need qualified human professionals; Claude can assist, not decide.",
+              "resource": { "title": "Responsible use", "url": "https://www.anthropic.com/legal/aup" }
+            },
+            {
+              "id": "cw-l2-q2",
+              "topic": "Working Habits",
+              "question": "A teammate asks how you made a great AI-assisted report. Good practice is to…",
+              "options": [
+                "Share the prompt and approach you used",
+                "Keep it secret",
+                "Deny using AI",
+                "Say it's magic"
+              ],
+              "correctIndex": 0,
+              "explanation": "Sharing prompts and workflows lifts the whole team — treat them like reusable templates.",
+              "resource": { "title": "Team workflows", "url": "https://support.anthropic.com" }
+            },
+            {
+              "id": "cw-l2-q3",
+              "topic": "Working Habits",
+              "question": "The most reliable way to get better at using Claude is…",
+              "options": [
+                "Regular practice on real tasks with iteration",
+                "Reading about it only",
+                "Using it once a year",
+                "Avoiding feedback"
+              ],
+              "correctIndex": 0,
+              "explanation": "Skill comes from reps: use it on real work, notice what helps, refine your prompts.",
+              "resource": { "title": "Learning resources", "url": "https://www.anthropic.com/learn" }
+            },
+            {
+              "id": "cw-l2-q4",
+              "topic": "Working Habits",
+              "question": "Before automating a workflow with AI, you should first…",
+              "options": [
+                "Do it manually with the AI a few times to learn the failure modes",
+                "Automate immediately",
+                "Remove all human review",
+                "Skip testing"
+              ],
+              "correctIndex": 0,
+              "explanation": "Manual runs reveal where the model shines and where it stumbles — then automate with the right checks.",
+              "resource": { "title": "Automation guidance", "url": "https://docs.claude.com" }
+            },
+            {
+              "id": "cw-l2-q5",
+              "topic": "Working Habits",
+              "question": "Which statement about AI at work is most accurate?",
+              "options": [
+                "AI output is always right",
+                "AI is a powerful collaborator; you stay accountable for the result",
+                "AI should never be used at work",
+                "AI removes the need to understand your field"
+              ],
+              "correctIndex": 1,
+              "explanation": "Think of Claude as a brilliant, fast collaborator whose work you review and own.",
+              "resource": { "title": "Working with AI", "url": "https://www.anthropic.com/learn" }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
