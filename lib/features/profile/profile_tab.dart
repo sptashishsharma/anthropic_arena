@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/app_info.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common.dart';
 import '../../gamification/badges.dart';
@@ -195,9 +196,19 @@ class ProfileTab extends ConsumerWidget {
                 ListTile(
                   leading: const Icon(Icons.notifications_outlined),
                   title: const Text('Streak reminders'),
-                  subtitle:
-                      const Text('Push notifications arrive with Firebase'),
-                  trailing: Switch(value: false, onChanged: null),
+                  subtitle: const Text('A daily nudge to keep your streak'),
+                  trailing: Switch(
+                    value: ref.watch(remindersProvider),
+                    onChanged: (on) async {
+                      final message = await ref
+                          .read(remindersProvider.notifier)
+                          .setEnabled(on);
+                      if (message != null && context.mounted) {
+                        ScaffoldMessenger.of(context)
+                            .showSnackBar(SnackBar(content: Text(message)));
+                      }
+                    },
+                  ),
                 ),
                 const Divider(height: 1),
                 ListTile(
@@ -222,10 +233,10 @@ class ProfileTab extends ConsumerWidget {
               children: [
                 const BrandMark(size: 40),
                 const SizedBox(height: 6),
-                Text('Anthropic Arena · v0.1.0',
+                Text('${AppInfo.name} · v${AppInfo.version}',
                     style: textTheme.labelSmall
                         ?.copyWith(color: scheme.onSurfaceVariant)),
-                Text('Built by SPTECH USA · Jaipur',
+                Text(AppInfo.credit,
                     style: textTheme.labelSmall
                         ?.copyWith(color: scheme.onSurfaceVariant)),
               ],

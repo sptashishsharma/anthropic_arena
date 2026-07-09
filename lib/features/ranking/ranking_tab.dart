@@ -4,7 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common.dart';
 import '../../data/leaderboard.dart';
+import '../../data/models/player.dart';
 import '../../state/providers.dart';
+import '../auth/login_screen.dart';
 
 class RankingTab extends ConsumerWidget {
   const RankingTab({super.key});
@@ -13,6 +15,8 @@ class RankingTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final entries = ref.watch(leaderboardProvider);
     final isLive = ref.watch(leaderboardIsLiveProvider);
+    final isGuest =
+        ref.watch(authProvider)?.provider == AuthProvider.guest;
     final hasPodium = entries.length >= 3;
     final top3 = hasPodium ? entries.take(3).toList() : <LeaderboardEntry>[];
     final rest = hasPodium ? entries.skip(3).toList() : entries;
@@ -32,6 +36,38 @@ class RankingTab extends ConsumerWidget {
                 color: Theme.of(context).colorScheme.onSurfaceVariant),
           ),
           const SizedBox(height: 24),
+          if (isGuest) ...[
+            ArenaCard(
+              child: Row(
+                children: [
+                  const Icon(Icons.emoji_events_outlined,
+                      color: AppColors.gold, size: 32),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'You\'re playing as a guest, so your score stays off '
+                      'the rankings. Sign in to compete!',
+                      style: textTheme.bodySmall,
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () async {
+                      await ref.read(authProvider.notifier).signOut();
+                      if (context.mounted) {
+                        Navigator.of(context).pushAndRemoveUntil(
+                          MaterialPageRoute(
+                              builder: (_) => const LoginScreen()),
+                          (_) => false,
+                        );
+                      }
+                    },
+                    child: const Text('Sign in'),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
           if (hasPodium)
             SizedBox(
               height: 216,

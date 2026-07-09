@@ -1,6 +1,6 @@
 {
     "name": "Anthropic Arena",
-    "short_name": "Arena",
+    "short_name": "Anthropic Arena",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0A0C10",

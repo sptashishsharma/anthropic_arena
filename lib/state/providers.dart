@@ -15,6 +15,7 @@ import '../data/models/course.dart';
 import '../data/models/player.dart';
 import '../data/models/progress.dart';
 import '../gamification/badges.dart';
+import '../gamification/reminder_service.dart';
 import '../gamification/xp_rules.dart';
 
 // ---------------------------------------------------------------------------
@@ -61,6 +62,43 @@ class ThemeController extends Notifier<ThemeMode> {
 
 final themeProvider =
     NotifierProvider<ThemeController, ThemeMode>(ThemeController.new);
+
+// ---------------------------------------------------------------------------
+// Streak reminders
+// ---------------------------------------------------------------------------
+
+class RemindersController extends Notifier<bool> {
+  static const _key = 'aa.reminders';
+
+  @override
+  bool build() => ref.read(prefsProvider).getBool(_key) ?? false;
+
+  /// Turns daily reminders on/off. Returns null on success or a
+  /// user-facing message when the change couldn't apply.
+  Future<String?> setEnabled(bool on) async {
+    if (!on) {
+      await ReminderService.disable();
+      state = false;
+      await ref.read(prefsProvider).setBool(_key, false);
+      return null;
+    }
+    if (kIsWeb) {
+      return 'Reminders work in the Android app for now — '
+          'browser notifications are coming later.';
+    }
+    final ok = await ReminderService.enable();
+    if (!ok) {
+      return 'Notification permission was denied — allow notifications for '
+          'Anthropic Arena in your phone settings and try again.';
+    }
+    state = true;
+    await ref.read(prefsProvider).setBool(_key, true);
+    return null;
+  }
+}
+
+final remindersProvider =
+    NotifierProvider<RemindersController, bool>(RemindersController.new);
 
 // ---------------------------------------------------------------------------
 // Auth
@@ -117,8 +155,10 @@ class AuthController extends Notifier<Player?> {
   }
 
   /// Pushes the public profile to Firestore so the leaderboard can see it.
+  /// Guests never sync: only signed-in players compete on the leaderboard.
   void _mirrorProfile(Player player) {
     if (!_firebase) return;
+    if (player.provider == AuthProvider.guest) return;
     final progress = ref.read(progressProvider);
     unawaited(FirebaseFirestore.instance
         .collection('users')
@@ -470,11 +510,13 @@ final _liveLeaderboardProvider = StreamProvider<List<LeaderboardEntry>>((ref) {
 final leaderboardProvider = Provider<List<LeaderboardEntry>>((ref) {
   final player = ref.watch(authProvider);
   final progress = ref.watch(progressProvider);
+  // Guests play but don't compete: rankings list signed-in players only.
+  final competing = player != null && player.provider != AuthProvider.guest;
 
   if (ref.watch(firebaseReadyProvider)) {
     final live = ref.watch(_liveLeaderboardProvider).value ?? const [];
     // Make sure the local player is visible even before their first sync.
-    if (player != null && !live.any((e) => e.isYou)) {
+    if (competing && !live.any((e) => e.isYou)) {
       return [
         ...live,
         LeaderboardEntry(
@@ -486,7 +528,7 @@ final leaderboardProvider = Provider<List<LeaderboardEntry>>((ref) {
 
   return [
     ...demoRivals,
-    if (player != null)
+    if (competing)
       LeaderboardEntry(
           name: player.name, tag: player.tag, xp: progress.xp, isYou: true),
   ]..sort((a, b) => b.xp.compareTo(a.xp));

@@ -1,7 +1,7 @@
 name: anthropic_arena
 description: A gamified, level-based learning app that teaches Anthropic Skill Jar course material as a game.
 publish_to: "none"
-version: 0.2.0+2
+version: 0.3.0+3
 
 environment:
   sdk: ^3.5.0
@@ -20,6 +20,7 @@ dependencies:
   firebase_core: ^4.11.0
   firebase_auth: ^6.5.4
   cloud_firestore: ^6.6.0
+  flutter_local_notifications: ^22.0.1
 
 dev_dependencies:
   flutter_test:
