@@ -56,8 +56,8 @@ class ProfileTab extends ConsumerWidget {
                         _ => Icons.sports_esports_rounded,
                       },
                       label: switch (player.provider.name) {
-                        'google' => 'Google (demo)',
-                        'apple' => 'Apple (demo)',
+                        'google' => player.isDemo ? 'Google (demo)' : 'Google',
+                        'apple' => player.isDemo ? 'Apple (demo)' : 'Apple',
                         'email' => player.email ?? 'Email',
                         _ => 'Guest player',
                       },

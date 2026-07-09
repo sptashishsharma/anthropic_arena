@@ -22,6 +22,10 @@ class Player {
   String get initial =>
       name.trim().isEmpty ? 'P' : name.trim()[0].toUpperCase();
 
+  /// Local demo accounts get ids like `p1720000000000123` from the offline
+  /// sign-in path; real Firebase accounts have opaque UIDs that never match.
+  bool get isDemo => RegExp(r'^p\d+$').hasMatch(id);
+
   Player copyWith({String? name}) => Player(
         id: id,
         name: name ?? this.name,
