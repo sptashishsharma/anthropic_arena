@@ -5,9 +5,12 @@ allprojects {
     }
 }
 
+// Build outside the project tree: this project lives in a OneDrive-synced
+// folder, and OneDrive's sync scanner locks Gradle's intermediate files
+// mid-build (random AccessDeniedException failures). C:\dev is not synced.
 val newBuildDir: Directory =
     rootProject.layout.buildDirectory
-        .dir("../../build")
+        .dir("C:/dev/builds/anthropic_arena")
         .get()
 rootProject.layout.buildDirectory.value(newBuildDir)
 

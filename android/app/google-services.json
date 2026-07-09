@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "1076701512218",
+    "project_id": "anthropic-arena",
+    "storage_bucket": "anthropic-arena.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1076701512218:android:8a9ddc364ac411363447a3",
+        "android_client_info": {
+          "package_name": "com.sptechusa.anthropic_arena"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1076701512218-sia6re824mck4jcapkpkr52f6jv8lufd.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD2Fgu6hEdz9BCLDP-L3Z7rTSdESKMLBEs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1076701512218-sia6re824mck4jcapkpkr52f6jv8lufd.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
