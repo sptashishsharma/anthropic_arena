@@ -27,4 +27,13 @@ abstract final class AppColors {
   // Leaderboard metals
   static const silver = Color(0xFFB9C0CC);
   static const bronze = Color(0xFFCD8A4B);
+
+  // Neon / glass accents. These reuse the brand gold + existing feedback
+  // hues so the palette stays intact — they only add glow + frosted-glass
+  // fills/borders on top of the same colours.
+  static const neonGold = goldBright;
+  static const glassFillDark = Color(0x14FFFFFF); // white @ ~8%
+  static const glassFillLight = Color(0x66FFFFFF); // white @ ~40%
+  static const glassStrokeDark = Color(0x33FFFFFF); // white @ ~20%
+  static const glassStrokeLight = Color(0x59FFFFFF); // white @ ~35%
 }

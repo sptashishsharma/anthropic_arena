@@ -9,8 +9,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../data/certification_repository.dart';
 import '../data/content_repository.dart';
 import '../data/leaderboard.dart';
+import '../data/models/certification.dart';
 import '../data/models/course.dart';
 import '../data/models/player.dart';
 import '../data/models/progress.dart';
@@ -36,6 +38,13 @@ final contentRepositoryProvider =
 
 final coursesProvider = FutureProvider<List<Course>>(
   (ref) => ref.watch(contentRepositoryProvider).loadCourses(),
+);
+
+final certificationRepositoryProvider = Provider<CertificationRepository>(
+    (ref) => const AssetCertificationRepository());
+
+final certificationsProvider = FutureProvider<List<Certification>>(
+  (ref) => ref.watch(certificationRepositoryProvider).loadCertifications(),
 );
 
 // ---------------------------------------------------------------------------
@@ -458,6 +467,64 @@ class ProgressController extends Notifier<UserProgress> {
       streakDays: streak,
       streakExtended: streakExtended,
     );
+  }
+
+  /// Number of stored cert attempts kept (bounds local storage).
+  static const _maxCertAttempts = 100;
+
+  /// Scores a finished certification exam, stores it for analytics and
+  /// returns the resulting attempt. [questions] are the scored questions that
+  /// were actually presented; unscored questions must not be passed in.
+  CertAttempt recordCertAttempt({
+    required Certification cert,
+    required List<CertQuestion> questions,
+    required Map<String, Set<int>> answers,
+    required int durationSeconds,
+    ExamSet? set,
+    bool autoSubmitted = false,
+    DateTime? now,
+  }) {
+    final when = now ?? DateTime.now();
+    final total = questions.length;
+    var correct = 0;
+    final topicCorrect = <String, int>{};
+    final topicTotal = <String, int>{};
+
+    for (final q in questions) {
+      final topic = q.topic.isEmpty ? cert.name : q.topic;
+      topicTotal[topic] = (topicTotal[topic] ?? 0) + 1;
+      if (q.isCorrect(answers[q.id] ?? const <int>{})) {
+        correct++;
+        topicCorrect[topic] = (topicCorrect[topic] ?? 0) + 1;
+      }
+    }
+
+    final scorePct = total == 0 ? 0 : (correct * 100 / total).round();
+    final attempt = CertAttempt(
+      certId: cert.id,
+      certName: cert.name,
+      setId: set?.id ?? '',
+      setLabel: set?.label ?? '',
+      dateIso: when.toIso8601String(),
+      scorePct: scorePct,
+      correct: correct,
+      total: total,
+      passMark: cert.passMark,
+      passed: scorePct >= cert.passMark,
+      durationSeconds: durationSeconds,
+      autoSubmitted: autoSubmitted,
+      topicCorrect: topicCorrect,
+      topicTotal: topicTotal,
+    );
+
+    final certAttempts = [...state.certAttempts, attempt];
+    if (certAttempts.length > _maxCertAttempts) {
+      certAttempts.removeRange(0, certAttempts.length - _maxCertAttempts);
+    }
+
+    state = state.copyWith(certAttempts: certAttempts);
+    _persist();
+    return attempt;
   }
 
   /// Whether [level] of [course] is playable given current progress.

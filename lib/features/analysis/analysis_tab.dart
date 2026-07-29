@@ -15,7 +15,10 @@ class AnalysisTab extends ConsumerWidget {
     final progress = ref.watch(progressProvider);
     final textTheme = Theme.of(context).textTheme;
 
-    if (progress.attempts.isEmpty) {
+    final hasLevels = progress.attempts.isNotEmpty;
+    final hasCerts = progress.certAttempts.isNotEmpty;
+
+    if (!hasLevels && !hasCerts) {
       return SafeArea(
         child: Center(
           child: Padding(
@@ -28,8 +31,8 @@ class AnalysisTab extends ConsumerWidget {
                 Text('No data yet', style: textTheme.headlineMedium),
                 const SizedBox(height: 8),
                 Text(
-                  'Play your first level and your personal analysis — '
-                  'accuracy, growth and weak spots — appears here.',
+                  'Play a level or take a certification exam — your personal '
+                  'analysis appears here.',
                   textAlign: TextAlign.center,
                   style: textTheme.bodyMedium?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant),
@@ -47,74 +50,88 @@ class AnalysisTab extends ConsumerWidget {
         children: [
           Text('Personal Analysis', style: textTheme.headlineMedium),
           const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: _StatCard(
-                  icon: Icons.bolt_rounded,
-                  color: AppColors.gold,
-                  value: '${progress.xp}',
-                  label: 'Total XP',
+          if (hasLevels) ...[
+            Row(
+              children: [
+                Expanded(
+                  child: _StatCard(
+                    icon: Icons.bolt_rounded,
+                    color: AppColors.gold,
+                    value: '${progress.xp}',
+                    label: 'Total XP',
+                  ),
                 ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _StatCard(
-                  icon: Icons.local_fire_department_rounded,
-                  color: const Color(0xFFFF7A45),
-                  value: '${progress.streakDays}',
-                  label: 'Day streak',
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _StatCard(
+                    icon: Icons.local_fire_department_rounded,
+                    color: const Color(0xFFFF7A45),
+                    value: '${progress.streakDays}',
+                    label: 'Day streak',
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(
-                child: _StatCard(
-                  icon: Icons.gps_fixed_rounded,
-                  color: AppColors.info,
-                  value: '${progress.accuracyPct}%',
-                  label: 'Accuracy',
+              ],
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: _StatCard(
+                    icon: Icons.gps_fixed_rounded,
+                    color: AppColors.info,
+                    value: '${progress.accuracyPct}%',
+                    label: 'Accuracy',
+                  ),
                 ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _StatCard(
-                  icon: Icons.flag_rounded,
-                  color: AppColors.success,
-                  value: '${progress.levelsCompleted}',
-                  label: 'Levels passed',
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _StatCard(
+                    icon: Icons.flag_rounded,
+                    color: AppColors.success,
+                    value: '${progress.levelsCompleted}',
+                    label: 'Levels passed',
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          const SectionTitle('XP — last 14 days'),
-          const SizedBox(height: 12),
-          ArenaCard(
-            padding: const EdgeInsets.fromLTRB(10, 18, 18, 8),
-            child: SizedBox(height: 180, child: _XpChart(progress: progress)),
-          ),
-          const SizedBox(height: 24),
-          const SectionTitle('Recent scores'),
-          const SizedBox(height: 12),
-          ArenaCard(
-            padding: const EdgeInsets.fromLTRB(10, 18, 18, 8),
-            child:
-                SizedBox(height: 160, child: _ScoresChart(progress: progress)),
-          ),
-          const SizedBox(height: 24),
-          const SectionTitle('Weak spots'),
-          const SizedBox(height: 4),
-          Text(
-            'Topics where your accuracy is lowest — revisit them to level up.',
-            style: textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant),
-          ),
-          const SizedBox(height: 12),
-          ..._weakSpots(progress, context),
+              ],
+            ),
+            const SizedBox(height: 24),
+            const SectionTitle('XP — last 14 days'),
+            const SizedBox(height: 12),
+            ArenaCard(
+              padding: const EdgeInsets.fromLTRB(10, 18, 18, 8),
+              child: SizedBox(height: 180, child: _XpChart(progress: progress)),
+            ),
+            const SizedBox(height: 24),
+            const SectionTitle('Recent scores'),
+            const SizedBox(height: 12),
+            ArenaCard(
+              padding: const EdgeInsets.fromLTRB(10, 18, 18, 8),
+              child: SizedBox(
+                  height: 160, child: _ScoresChart(progress: progress)),
+            ),
+            const SizedBox(height: 24),
+            const SectionTitle('Weak spots'),
+            const SizedBox(height: 4),
+            Text(
+              'Topics where your accuracy is lowest — revisit them to level up.',
+              style: textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant),
+            ),
+            const SizedBox(height: 12),
+            ..._weakSpots(progress, context),
+          ],
+          if (hasCerts) ...[
+            if (hasLevels) const SizedBox(height: 24),
+            const SectionTitle('Certification performance'),
+            const SizedBox(height: 4),
+            Text(
+              'Your practice-exam results per credential.',
+              style: textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant),
+            ),
+            const SizedBox(height: 12),
+            ..._CertificationSection.build(progress, context),
+          ],
         ],
       ),
     );
@@ -188,6 +205,118 @@ class AnalysisTab extends ConsumerWidget {
         const SizedBox(height: 8),
       ],
     ];
+  }
+}
+
+/// Per-credential summary cards for the Certification section of Analysis.
+/// One card per certification the user has attempted, most recent first.
+abstract final class _CertificationSection {
+  static List<Widget> build(UserProgress progress, BuildContext context) {
+    final byCert = <String, List<CertAttempt>>{};
+    for (final a in progress.certAttempts) {
+      byCert.putIfAbsent(a.certId, () => []).add(a);
+    }
+    final entries = byCert.entries.toList()
+      ..sort((a, b) => b.value.last.dateIso.compareTo(a.value.last.dateIso));
+
+    return [
+      for (final e in entries) ...[
+        _CertSummaryCard(attempts: e.value),
+        const SizedBox(height: 10),
+      ],
+    ];
+  }
+}
+
+class _CertSummaryCard extends StatelessWidget {
+  const _CertSummaryCard({required this.attempts});
+
+  /// All attempts for a single certification.
+  final List<CertAttempt> attempts;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final scheme = Theme.of(context).colorScheme;
+    final last = attempts.last;
+    var best = attempts.first;
+    for (final a in attempts) {
+      if (a.scorePct > best.scorePct) best = a;
+    }
+    final passed = best.passed;
+    final statusColor = passed ? AppColors.success : AppColors.danger;
+
+    return ArenaCard(
+      borderColor: passed ? AppColors.success.withValues(alpha: 0.5) : null,
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                passed
+                    ? Icons.workspace_premium_rounded
+                    : Icons.timelapse_rounded,
+                color: statusColor,
+                size: 22,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(last.certName, style: textTheme.titleLarge),
+              ),
+              Text(
+                passed ? 'Passed' : 'Keep going',
+                style: textTheme.labelLarge
+                    ?.copyWith(color: statusColor, fontWeight: FontWeight.w700),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Text('Best ${best.scorePct}%',
+                  style: textTheme.titleMedium
+                      ?.copyWith(fontWeight: FontWeight.w800)),
+              const SizedBox(width: 10),
+              Text('· pass ${best.passMark}%',
+                  style: textTheme.labelMedium
+                      ?.copyWith(color: scheme.onSurfaceVariant)),
+              const Spacer(),
+              Text(
+                '${attempts.length} attempt${attempts.length == 1 ? '' : 's'}'
+                ' · last ${last.scorePct}%',
+                style: textTheme.labelMedium
+                    ?.copyWith(color: scheme.onSurfaceVariant),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Stack(
+            children: [
+              ArenaProgressBar(value: best.scorePct / 100, color: statusColor),
+              // Pass-mark marker.
+              Positioned.fill(
+                child: LayoutBuilder(
+                  builder: (context, c) => Padding(
+                    padding: EdgeInsets.only(
+                        left: c.maxWidth * (best.passMark / 100) - 1),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Container(
+                        width: 2,
+                        height: 10,
+                        color: scheme.onSurface.withValues(alpha: 0.7),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 }
 

@@ -4,22 +4,39 @@
     "ignore": ["firebase.json", "**/.*"],
     "headers": [
       {
-        "source": "**/*.@(js|wasm)",
-        "headers": [
-          { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
-        ]
-      },
-      {
+        "//": "Flutter web ships UNHASHED filenames (flutter_bootstrap.js points at a bare 'main.dart.js'), so nothing here may be immutable — a long max-age pins returning visitors to a stale build forever. no-cache still allows caching, it just forces a revalidate, so unchanged files come back as a cheap 304.",
         "source": "/index.html",
-        "headers": [
-          { "key": "Cache-Control", "value": "no-cache" }
-        ]
+        "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
       },
       {
         "source": "/flutter_bootstrap.js",
-        "headers": [
-          { "key": "Cache-Control", "value": "no-cache" }
-        ]
+        "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
+      },
+      {
+        "source": "/main.dart.js",
+        "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
+      },
+      {
+        "source": "/flutter_service_worker.js",
+        "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
+      },
+      {
+        "source": "/version.json",
+        "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
+      },
+      {
+        "source": "/manifest.json",
+        "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
+      },
+      {
+        "//": "Course + certification banks live here and must never go stale.",
+        "source": "/assets/**",
+        "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
+      },
+      {
+        "//": "Engine files: stable within a Flutter SDK version, safe to cache for a day.",
+        "source": "/canvaskit/**",
+        "headers": [{ "key": "Cache-Control", "value": "public, max-age=86400" }]
       }
     ]
   },

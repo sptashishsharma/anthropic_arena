@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
+import 'glass.dart';
 
 /// The shield crest, transparent PNG; gold variant pops on dark surfaces.
 class BrandMark extends StatelessWidget {
@@ -38,26 +39,17 @@ class ArenaCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    // The Material sits inside the decorated box so ink splashes (and
-    // ListTile backgrounds) paint correctly on top of the card colour.
-    return Container(
-      decoration: BoxDecoration(
-        color: color ?? scheme.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: borderColor ?? scheme.outline),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Material(
-        color: Colors.transparent,
-        child: onTap == null
-            ? Padding(padding: padding, child: child)
-            : InkWell(
-                onTap: onTap,
-                borderRadius: BorderRadius.circular(20),
-                child: Padding(padding: padding, child: child),
-              ),
-      ),
+    // Frosted-glass panel: a translucent tinted fill over a backdrop blur,
+    // with a hairline light border. A caller-supplied [borderColor] (e.g. the
+    // gold "this is you" highlight) also casts a matching neon glow.
+    return GlassSurface(
+      padding: padding,
+      onTap: onTap,
+      fill: color,
+      borderColor: borderColor,
+      glow: borderColor,
+      glowAlpha: 0.22,
+      child: child,
     );
   }
 }
@@ -80,8 +72,16 @@ class StatChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.14),
+        color: color.withValues(alpha: 0.16),
         borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withValues(alpha: 0.35)),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.22),
+            blurRadius: 12,
+            spreadRadius: -2,
+          ),
+        ],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

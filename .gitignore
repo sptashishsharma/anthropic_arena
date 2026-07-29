@@ -44,3 +44,9 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 .firebase/
+
+# Local build backups kept outside /build (hundreds of MB, never versioned)
+build_bak_*/
+
+# Claude Code: shared project settings are committed, per-machine ones are not
+.claude/settings.local.json

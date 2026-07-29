@@ -104,6 +104,85 @@ class AttemptRecord {
       };
 }
 
+/// One finished certification exam — the raw material for the Certification
+/// section of Personal Analysis.
+class CertAttempt {
+  const CertAttempt({
+    required this.certId,
+    required this.certName,
+    required this.dateIso,
+    required this.scorePct,
+    required this.correct,
+    required this.total,
+    required this.passMark,
+    required this.passed,
+    required this.durationSeconds,
+    required this.autoSubmitted,
+    required this.topicCorrect,
+    required this.topicTotal,
+    this.setId = '',
+    this.setLabel = '',
+  });
+
+  final String certId;
+  final String certName;
+
+  /// The exam set this attempt was drawn from (empty for legacy attempts).
+  final String setId;
+  final String setLabel;
+  final String dateIso; // full ISO timestamp
+  final int scorePct;
+  final int correct;
+  final int total;
+  final int passMark;
+  final bool passed;
+
+  /// Seconds spent on the exam (elapsed of the allotted time).
+  final int durationSeconds;
+
+  /// True when the timer ran out and the exam submitted itself.
+  final bool autoSubmitted;
+
+  final Map<String, int> topicCorrect;
+  final Map<String, int> topicTotal;
+
+  factory CertAttempt.fromJson(Map<String, dynamic> json) => CertAttempt(
+        certId: json['certId'] as String,
+        certName: json['certName'] as String? ?? '',
+        setId: json['setId'] as String? ?? '',
+        setLabel: json['setLabel'] as String? ?? '',
+        dateIso: json['dateIso'] as String,
+        scorePct: json['scorePct'] as int,
+        correct: json['correct'] as int,
+        total: json['total'] as int,
+        passMark: json['passMark'] as int? ?? 65,
+        passed: json['passed'] as bool? ?? false,
+        durationSeconds: json['durationSeconds'] as int? ?? 0,
+        autoSubmitted: json['autoSubmitted'] as bool? ?? false,
+        topicCorrect:
+            ((json['topicCorrect'] as Map?) ?? const {}).cast<String, int>(),
+        topicTotal:
+            ((json['topicTotal'] as Map?) ?? const {}).cast<String, int>(),
+      );
+
+  Map<String, dynamic> toJson() => {
+        'certId': certId,
+        'certName': certName,
+        'setId': setId,
+        'setLabel': setLabel,
+        'dateIso': dateIso,
+        'scorePct': scorePct,
+        'correct': correct,
+        'total': total,
+        'passMark': passMark,
+        'passed': passed,
+        'durationSeconds': durationSeconds,
+        'autoSubmitted': autoSubmitted,
+        'topicCorrect': topicCorrect,
+        'topicTotal': topicTotal,
+      };
+}
+
 /// Everything the player has earned, stored locally (and later synced to
 /// Firestore).
 class UserProgress {
@@ -117,6 +196,7 @@ class UserProgress {
     this.badges = const {},
     this.xpByDay = const {},
     this.attempts = const [],
+    this.certAttempts = const [],
   });
 
   final int xp;
@@ -133,6 +213,9 @@ class UserProgress {
   final Map<String, int> xpByDay;
   final List<AttemptRecord> attempts;
 
+  /// Finished certification exams, oldest first.
+  final List<CertAttempt> certAttempts;
+
   int get levelsCompleted => levels.values.where((l) => l.passed).length;
 
   int get accuracyPct =>
@@ -140,6 +223,20 @@ class UserProgress {
 
   LevelProgress progressFor(String levelId) =>
       levels[levelId] ?? LevelProgress(levelId: levelId);
+
+  /// All exam attempts for one certification, most recent last.
+  List<CertAttempt> certAttemptsFor(String certId) =>
+      certAttempts.where((a) => a.certId == certId).toList();
+
+  /// The highest-scoring attempt for a certification, or null if never taken.
+  CertAttempt? bestCertAttempt(String certId) {
+    CertAttempt? best;
+    for (final a in certAttempts) {
+      if (a.certId != certId) continue;
+      if (best == null || a.scorePct > best.scorePct) best = a;
+    }
+    return best;
+  }
 
   UserProgress copyWith({
     int? xp,
@@ -151,6 +248,7 @@ class UserProgress {
     Set<String>? badges,
     Map<String, int>? xpByDay,
     List<AttemptRecord>? attempts,
+    List<CertAttempt>? certAttempts,
   }) =>
       UserProgress(
         xp: xp ?? this.xp,
@@ -162,6 +260,7 @@ class UserProgress {
         badges: badges ?? this.badges,
         xpByDay: xpByDay ?? this.xpByDay,
         attempts: attempts ?? this.attempts,
+        certAttempts: certAttempts ?? this.certAttempts,
       );
 
   factory UserProgress.fromJson(Map<String, dynamic> json) => UserProgress(
@@ -179,6 +278,10 @@ class UserProgress {
             .map((a) =>
                 AttemptRecord.fromJson((a as Map).cast<String, dynamic>()))
             .toList(),
+        certAttempts: ((json['certAttempts'] as List?) ?? const [])
+            .map((a) =>
+                CertAttempt.fromJson((a as Map).cast<String, dynamic>()))
+            .toList(),
       );
 
   Map<String, dynamic> toJson() => {
@@ -191,5 +294,6 @@ class UserProgress {
         'badges': badges.toList(),
         'xpByDay': xpByDay,
         'attempts': attempts.map((a) => a.toJson()).toList(),
+        'certAttempts': certAttempts.map((a) => a.toJson()).toList(),
       };
 }

@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common.dart';
+import '../../core/widgets/glass.dart';
 import '../../data/models/course.dart';
 import '../../state/providers.dart';
 import 'level_result_screen.dart';
@@ -36,8 +37,7 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
   int? get _selected => _answers[_current.id];
   bool get _isLast => _index == _questions.length - 1;
 
-  void _select(int option) =>
-      setState(() => _answers[_current.id] = option);
+  void _select(int option) => setState(() => _answers[_current.id] = option);
 
   void _goPrevious() {
     if (_index > 0) setState(() => _index--);
@@ -164,7 +164,8 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
             icon: const Icon(Icons.close_rounded),
             onPressed: _confirmExit,
           ),
-          title: Text('${widget.level.title} · ${_index + 1}/${_questions.length}'),
+          title: Text(
+              '${widget.level.title} · ${_index + 1}/${_questions.length}'),
           actions: [
             IconButton(
               tooltip: 'Get unstuck',
@@ -184,72 +185,75 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
             ),
           ),
         ),
-        body: SafeArea(
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 560),
-              child: Column(
-                children: [
-                  Expanded(
-                    child: ListView(
-                      padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
-                      children: [
-                        StatChip(
-                          icon: Icons.category_rounded,
-                          label: _current.topic,
-                          color: widget.course.color,
-                        ),
-                        const SizedBox(height: 14),
-                        Text(_current.question,
-                            style: textTheme.headlineMedium),
-                        const SizedBox(height: 22),
-                        for (var i = 0; i < _current.options.length; i++) ...[
-                          _OptionTile(
-                            letter: String.fromCharCode(65 + i),
-                            text: _current.options[i],
-                            selected: _selected == i,
-                            onTap: () => _select(i),
+        body: NeonBackground(
+          accent: widget.course.color,
+          child: SafeArea(
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 560),
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: ListView(
+                        padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+                        children: [
+                          StatChip(
+                            icon: Icons.category_rounded,
+                            label: _current.topic,
+                            color: widget.course.color,
                           ),
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 14),
+                          Text(_current.question,
+                              style: textTheme.headlineMedium),
+                          const SizedBox(height: 22),
+                          for (var i = 0; i < _current.options.length; i++) ...[
+                            _OptionTile(
+                              letter: String.fromCharCode(65 + i),
+                              text: _current.options[i],
+                              selected: _selected == i,
+                              onTap: () => _select(i),
+                            ),
+                            const SizedBox(height: 10),
+                          ],
                         ],
-                      ],
+                      ),
                     ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
-                    child: Row(
-                      children: [
-                        SizedBox(
-                          width: 56,
-                          child: OutlinedButton(
-                            onPressed: _index > 0 ? _goPrevious : null,
-                            style: OutlinedButton.styleFrom(
-                                padding: EdgeInsets.zero),
-                            child: const Tooltip(
-                              message: 'Previous question',
-                              child: Icon(Icons.arrow_back_rounded, size: 20),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
+                      child: Row(
+                        children: [
+                          SizedBox(
+                            width: 56,
+                            child: OutlinedButton(
+                              onPressed: _index > 0 ? _goPrevious : null,
+                              style: OutlinedButton.styleFrom(
+                                  padding: EdgeInsets.zero),
+                              child: const Tooltip(
+                                message: 'Previous question',
+                                child: Icon(Icons.arrow_back_rounded, size: 20),
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: _skip,
-                            child: Text(_isLast ? 'Skip & finish' : 'Skip'),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: _skip,
+                              child: Text(_isLast ? 'Skip & finish' : 'Skip'),
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          flex: 2,
-                          child: FilledButton(
-                            onPressed: _selected != null ? _next : null,
-                            child: Text(_isLast ? 'Finish' : 'Next'),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            flex: 2,
+                            child: FilledButton(
+                              onPressed: _selected != null ? _next : null,
+                              child: Text(_isLast ? 'Finish' : 'Next'),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -278,9 +282,8 @@ class _OptionTile extends StatelessWidget {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 160),
       decoration: BoxDecoration(
-        color: selected
-            ? AppColors.gold.withValues(alpha: 0.14)
-            : scheme.surface,
+        color:
+            selected ? AppColors.gold.withValues(alpha: 0.14) : scheme.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: selected ? AppColors.gold : scheme.outline,
@@ -316,8 +319,8 @@ class _OptionTile extends StatelessWidget {
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: Text(text,
-                      style: Theme.of(context).textTheme.bodyLarge),
+                  child:
+                      Text(text, style: Theme.of(context).textTheme.bodyLarge),
                 ),
               ],
             ),

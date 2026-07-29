@@ -55,7 +55,7 @@ void main() {
     expect(find.text('Play as guest'), findsOneWidget);
   });
 
-  testWidgets('guest sign-in lands on the home shell with 4 tabs',
+  testWidgets('guest sign-in lands on the home shell with 5 tabs',
       (tester) async {
     await tester.pumpWidget(await wrap(const LoginScreen()));
     await tester.tap(find.text('Play as guest'));
@@ -63,6 +63,7 @@ void main() {
 
     expect(find.byType(HomeShell), findsOneWidget);
     expect(find.text('Learn'), findsOneWidget);
+    expect(find.text('Certifications'), findsOneWidget);
     expect(find.text('Ranking'), findsOneWidget);
     expect(find.text('Analysis'), findsOneWidget);
     expect(find.text('Profile'), findsOneWidget);
