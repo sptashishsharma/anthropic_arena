@@ -32,6 +32,112 @@
 
   <title>Anthropic Arena — Learn · Play · Compete</title>
   <link rel="manifest" href="manifest.json">
+
+  <!--
+    Install prompt. Chrome/Edge fire `beforeinstallprompt` only once per page
+    load and only while the app is installable, so the listener has to be
+    registered here in <head> — before flutter_bootstrap.js runs — or the event
+    is missed and no prompt can ever be shown. The banner UI itself is built at
+    the end of <body>; this just parks the event for it.
+  -->
+  <script>
+    window.__aaInstallEvent = null;
+    window.addEventListener('beforeinstallprompt', function (e) {
+      // Suppress Chrome's own mini-infobar so our banner is the single ask.
+      e.preventDefault();
+      window.__aaInstallEvent = e;
+      if (typeof window.__aaShowInstallBanner === 'function') {
+        window.__aaShowInstallBanner();
+      }
+    });
+  </script>
+
+  <style>
+    /*
+      Deliberately plain DOM, layered over Flutter's canvas rather than built as
+      a Flutter widget: it can show before the engine finishes booting, and its
+      taps are handled by the browser instead of Flutter's hit testing.
+    */
+    #aa-install {
+      position: fixed;
+      z-index: 9999;
+      left: 50%;
+      bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+      transform: translate(-50%, 140%);
+      width: calc(100% - 32px);
+      max-width: 430px;
+      box-sizing: border-box;
+      display: none;
+      gap: 14px;
+      align-items: center;
+      padding: 14px 16px;
+      border-radius: 20px;
+      border: 1.2px solid rgba(245, 166, 35, 0.55);
+      background: rgba(16, 19, 26, 0.82);
+      -webkit-backdrop-filter: blur(16px);
+      backdrop-filter: blur(16px);
+      box-shadow: 0 10px 40px rgba(245, 166, 35, 0.24), 0 6px 24px rgba(0, 0, 0, 0.5);
+      color: #F2EFE9;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1), opacity 320ms ease;
+      opacity: 0;
+    }
+    #aa-install.aa-visible {
+      display: flex;
+      transform: translate(-50%, 0);
+      opacity: 1;
+    }
+    #aa-install img {
+      width: 44px;
+      height: 44px;
+      border-radius: 11px;
+      flex: 0 0 auto;
+    }
+    #aa-install .aa-copy { flex: 1 1 auto; min-width: 0; }
+    #aa-install .aa-title {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+    }
+    #aa-install .aa-sub {
+      font-size: 12.5px;
+      line-height: 1.35;
+      margin-top: 2px;
+      color: #A8AEBB;
+    }
+    #aa-install .aa-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex: 0 0 auto;
+    }
+    #aa-install button {
+      font: inherit;
+      cursor: pointer;
+      border-radius: 11px;
+      border: 0;
+      padding: 9px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    #aa-install #aa-install-yes {
+      background: #F5A623;
+      color: #0A0C10;
+    }
+    #aa-install #aa-install-yes:hover { background: #ffb944; }
+    #aa-install #aa-install-no {
+      background: transparent;
+      color: #A8AEBB;
+      font-weight: 600;
+      padding: 4px 8px;
+    }
+    #aa-install #aa-install-no:hover { color: #F2EFE9; }
+    @media (max-width: 380px) {
+      #aa-install { gap: 10px; padding: 12px; }
+      #aa-install img { width: 38px; height: 38px; }
+    }
+  </style>
 </head>
 <body>
   <!--
@@ -43,5 +149,97 @@
     * https://docs.flutter.dev/platform-integration/web/initialization
   -->
   <script src="flutter_bootstrap.js" async></script>
+
+  <div id="aa-install" role="dialog" aria-live="polite" aria-label="Install Anthropic Arena">
+    <img src="icons/Icon-192.png" alt="">
+    <div class="aa-copy">
+      <div class="aa-title">Install Anthropic Arena</div>
+      <div class="aa-sub" id="aa-install-sub">Add it to your device for full-screen play and offline levels.</div>
+    </div>
+    <div class="aa-actions">
+      <button id="aa-install-yes" type="button">Install</button>
+      <button id="aa-install-no" type="button">Not now</button>
+    </div>
+  </div>
+
+  <script>
+  (function () {
+    var DISMISS_KEY = 'aa.install.dismissed';
+    var banner = document.getElementById('aa-install');
+    var yes = document.getElementById('aa-install-yes');
+    var no = document.getElementById('aa-install-no');
+    var sub = document.getElementById('aa-install-sub');
+
+    // Already installed? Running from the home screen / app window means there
+    // is nothing to ask for.
+    function installed() {
+      return window.matchMedia('(display-mode: standalone)').matches ||
+             window.matchMedia('(display-mode: fullscreen)').matches ||
+             window.navigator.standalone === true;
+    }
+
+    // Dismissal is remembered per browsing session only, so the ask comes back
+    // next time the site is opened rather than being silenced forever.
+    function dismissed() {
+      try { return sessionStorage.getItem(DISMISS_KEY) === '1'; } catch (e) { return false; }
+    }
+    function rememberDismissal() {
+      try { sessionStorage.setItem(DISMISS_KEY, '1'); } catch (e) { /* private mode */ }
+    }
+
+    function show() { banner.classList.add('aa-visible'); }
+    function hide() { banner.classList.remove('aa-visible'); }
+
+    no.addEventListener('click', function () {
+      rememberDismissal();
+      hide();
+    });
+
+    yes.addEventListener('click', function () {
+      var evt = window.__aaInstallEvent;
+      if (!evt) { hide(); return; }
+      // prompt() must be called from a user gesture, which is why the native
+      // dialog is triggered here rather than on page load.
+      evt.prompt();
+      evt.userChoice.then(function (choice) {
+        if (choice && choice.outcome === 'accepted') {
+          hide();
+        } else {
+          rememberDismissal();
+          hide();
+        }
+        window.__aaInstallEvent = null;
+      }).catch(function () { hide(); });
+    });
+
+    // Called by the <head> listener when the browser says we're installable.
+    window.__aaShowInstallBanner = function () {
+      if (installed() || dismissed()) return;
+      // Let the app paint first so the ask doesn't land on a blank canvas.
+      window.setTimeout(show, 1200);
+    };
+
+    // The event may have fired before this script ran.
+    if (window.__aaInstallEvent) window.__aaShowInstallBanner();
+
+    window.addEventListener('appinstalled', function () {
+      window.__aaInstallEvent = null;
+      hide();
+    });
+
+    // iOS Safari never fires beforeinstallprompt and has no programmatic
+    // install, so it gets the same ask with manual instructions instead.
+    var ua = window.navigator.userAgent;
+    var isIos = /iPad|iPhone|iPod/.test(ua) ||
+                (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    var isSafari = /Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS|Chrome|Android/.test(ua);
+    if (isIos && isSafari && !installed() && !dismissed()) {
+      sub.textContent = 'Tap the Share button, then "Add to Home Screen".';
+      yes.style.display = 'none';
+      no.textContent = 'Got it';
+      window.setTimeout(show, 1600);
+    }
+  })();
+  </script>
 </body>
 </html>
