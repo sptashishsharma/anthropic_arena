@@ -258,13 +258,15 @@ class AuthController extends Notifier<Player?> {
     return null;
   }
 
-  /// Microsoft work/school (Entra ID) or personal account. Real popup on web;
-  /// demo account elsewhere until those platforms are registered with Firebase.
+  /// Microsoft work/school (Entra ID) or personal account. Real sign-in on
+  /// every platform Firebase is initialised for: a popup on web, a secure
+  /// browser tab (Custom Tabs / SFSafariViewController) on mobile. Falls back
+  /// to a local demo account only where Firebase itself is unavailable.
   ///
   /// Which accounts are accepted is set by [AuthConfig.microsoftTenant] — the
   /// default lets anyone from any organization in.
   Future<String?> signInMicrosoft() async {
-    if (_firebase && kIsWeb) {
+    if (_firebase) {
       try {
         final provider = fb.OAuthProvider('microsoft.com')
           ..setCustomParameters({
@@ -273,7 +275,11 @@ class AuthController extends Notifier<Player?> {
             // silently reusing whatever the browser signed in with last.
             'prompt': 'select_account',
           });
-        final cred = await fb.FirebaseAuth.instance.signInWithPopup(provider);
+        final auth = fb.FirebaseAuth.instance;
+        // Web has no activity to hand off to, mobile has no popup.
+        final cred = kIsWeb
+            ? await auth.signInWithPopup(provider)
+            : await auth.signInWithProvider(provider);
         final user = cred.user!;
         // Microsoft often leaves the top-level email null and puts the work
         // address in the raw profile instead.

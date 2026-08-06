@@ -85,9 +85,12 @@ set *Supported account types* correctly in step 1.4 — Azure enforces that one.
 
 ## Notes
 
-- **Web works today.** Android/iOS fall back to a local demo account for
-  Microsoft (same as Google) until those platforms get native OAuth wiring —
-  ask and it can be added.
+- **Web and Android both use the real login.** Web opens a popup
+  (`signInWithPopup`); Android hands off to a secure Chrome Custom Tab
+  (`signInWithProvider`). Both consume the same Azure app registration and the
+  same `firebaseapp.com/__/auth/handler` redirect — there is nothing extra to
+  register for Android. iOS will work the same way once that platform is added
+  to the Firebase project.
 - **Microsoft accounts are real accounts**: they appear on the global
   leaderboard and unlock the Certifications tab, unlike guest sessions.
 - **Same person, two providers:** if someone signs up with Google using
