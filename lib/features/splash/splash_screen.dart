@@ -6,6 +6,7 @@ import '../../core/widgets/arena_video.dart';
 import '../../core/widgets/common.dart';
 import '../../state/providers.dart';
 import '../auth/login_screen.dart';
+import '../auth/onboarding_screen.dart';
 import '../home/home_shell.dart';
 
 /// Plays the brand splash video, then routes to login or straight into the
@@ -24,10 +25,13 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     if (_navigated || !mounted) return;
     _navigated = true;
     final signedIn = ref.read(authProvider) != null;
+    // Brand-new device: explain the app before asking anyone to sign in.
+    final onboarded = ref.read(onboardingSeenProvider);
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
-        pageBuilder: (_, __, ___) =>
-            signedIn ? const HomeShell() : const LoginScreen(),
+        pageBuilder: (_, __, ___) => signedIn
+            ? const HomeShell()
+            : (onboarded ? const LoginScreen() : const OnboardingScreen()),
         transitionsBuilder: (_, animation, __, child) =>
             FadeTransition(opacity: animation, child: child),
         transitionDuration: const Duration(milliseconds: 450),

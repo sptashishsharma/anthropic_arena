@@ -2,9 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/app_info.dart';
+import '../../core/layout.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common.dart';
+import '../../core/widgets/progress_ring.dart';
+import '../../core/widgets/streak_heatmap.dart';
+import '../../data/models/course.dart';
+import '../../data/models/progress.dart';
 import '../../gamification/badges.dart';
+import '../../gamification/ranks.dart';
 import '../../state/providers.dart';
 import '../auth/login_screen.dart';
 
@@ -21,13 +27,22 @@ class ProfileTab extends ConsumerWidget {
 
     if (player == null) return const SizedBox.shrink();
 
+    final tier = Ranks.forXp(progress.xp);
+
     return SafeArea(
-      child: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+      child: ContentShell(
+        maxWidth: 820,
+        child: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 96),
         children: [
           Row(
             children: [
-              PlayerAvatar(initial: player.initial, size: 64),
+              PlayerAvatar(
+                initial: player.initial,
+                photoUrl: player.photoUrl,
+                size: 64,
+                ring: tier.color,
+              ),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
@@ -77,7 +92,9 @@ class ProfileTab extends ConsumerWidget {
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 18),
+          _RankCard(progress: progress),
+          const SizedBox(height: 14),
           Row(
             children: [
               Expanded(
@@ -85,7 +102,7 @@ class ProfileTab extends ConsumerWidget {
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   child: Column(
                     children: [
-                      Text('${progress.xp}',
+                      CountUpText(progress.xp,
                           style: textTheme.headlineSmall
                               ?.copyWith(color: AppColors.gold)),
                       Text('XP', style: textTheme.labelSmall),
@@ -99,7 +116,7 @@ class ProfileTab extends ConsumerWidget {
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   child: Column(
                     children: [
-                      Text('${progress.streakDays}',
+                      CountUpText(progress.streakDays,
                           style: textTheme.headlineSmall
                               ?.copyWith(color: const Color(0xFFFF7A45))),
                       Text('Streak', style: textTheme.labelSmall),
@@ -113,7 +130,7 @@ class ProfileTab extends ConsumerWidget {
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   child: Column(
                     children: [
-                      Text('${progress.badges.length}',
+                      CountUpText(progress.badges.length,
                           style: textTheme.headlineSmall
                               ?.copyWith(color: AppColors.success)),
                       Text('Badges', style: textTheme.labelSmall),
@@ -124,42 +141,28 @@ class ProfileTab extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 24),
-          const SectionTitle('Badges'),
+          const SectionTitle('Activity'),
           const SizedBox(height: 12),
-          GridView.count(
-            crossAxisCount: 5,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            mainAxisSpacing: 10,
-            crossAxisSpacing: 10,
-            children: [
-              for (final badge in Badges.all)
-                Tooltip(
-                  message: '${badge.name}\n${badge.description}',
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: progress.badges.contains(badge.id)
-                          ? AppColors.gold.withValues(alpha: 0.16)
-                          : scheme.surface,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: progress.badges.contains(badge.id)
-                            ? AppColors.gold
-                            : scheme.outline,
-                      ),
-                    ),
-                    child: Icon(
-                      progress.badges.contains(badge.id)
-                          ? badge.icon
-                          : Icons.lock_outline_rounded,
-                      color: progress.badges.contains(badge.id)
-                          ? AppColors.gold
-                          : scheme.onSurfaceVariant,
-                    ),
-                  ),
-                ),
-            ],
+          ArenaCard(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Last 14 weeks',
+                    style: textTheme.labelMedium
+                        ?.copyWith(color: scheme.onSurfaceVariant)),
+                const SizedBox(height: 12),
+                StreakHeatmap(xpByDay: progress.xpByDay),
+              ],
+            ),
           ),
+          const SizedBox(height: 24),
+          SectionTitle('Badges',
+              trailing: Text('${progress.badges.length}/${Badges.all.length}',
+                  style: textTheme.labelLarge
+                      ?.copyWith(color: scheme.onSurfaceVariant))),
+          const SizedBox(height: 12),
+          _BadgeGrid(progress: progress),
           const SizedBox(height: 24),
           const SectionTitle('Settings'),
           const SizedBox(height: 12),
@@ -247,6 +250,7 @@ class ProfileTab extends ConsumerWidget {
             ),
           ),
         ],
+        ),
       ),
     );
   }
@@ -315,5 +319,190 @@ class ProfileTab extends ConsumerWidget {
         (_) => false,
       );
     }
+  }
+}
+
+/// Rank tier hero: current tier, XP ring to the next one, and how far away it
+/// is. Gives players a goal that outlives finishing every course.
+class _RankCard extends StatelessWidget {
+  const _RankCard({required this.progress});
+
+  final UserProgress progress;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final scheme = Theme.of(context).colorScheme;
+    final tier = Ranks.forXp(progress.xp);
+    final next = Ranks.nextAfter(progress.xp);
+
+    return ArenaCard(
+      padding: const EdgeInsets.all(18),
+      borderColor: tier.color,
+      child: Row(
+        children: [
+          ProgressRing(
+            value: Ranks.progress(progress.xp),
+            color: tier.color,
+            size: 82,
+            stroke: 8,
+            child: Icon(tier.icon, color: tier.color, size: 32),
+          ),
+          const SizedBox(width: 18),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Rank', style: textTheme.labelMedium?.copyWith(
+                    color: scheme.onSurfaceVariant)),
+                Text(tier.name,
+                    style: textTheme.headlineSmall?.copyWith(color: tier.color)),
+                const SizedBox(height: 6),
+                Text(
+                  next == null
+                      ? 'Top tier reached — you are a Legend.'
+                      : '${Ranks.xpToNext(progress.xp)} XP to ${next.name}',
+                  style: textTheme.bodySmall
+                      ?.copyWith(color: scheme.onSurfaceVariant),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Badge wall. Locked badges show how close they are and open a detail sheet
+/// on tap, so they read as goals rather than dead padlocks.
+class _BadgeGrid extends ConsumerWidget {
+  const _BadgeGrid({required this.progress});
+
+  final UserProgress progress;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final scheme = Theme.of(context).colorScheme;
+    final courses = ref.watch(coursesProvider).value ?? const <Course>[];
+    final columns = MediaQuery.sizeOf(context).width >= Breakpoints.medium ? 7 : 5;
+
+    return GridView.count(
+      crossAxisCount: columns,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      mainAxisSpacing: 10,
+      crossAxisSpacing: 10,
+      children: [
+        for (final badge in Badges.all)
+          Builder(builder: (context) {
+            final earned = progress.badges.contains(badge.id);
+            final pct = badge.progressFor(progress, courses);
+            return InkWell(
+              borderRadius: BorderRadius.circular(16),
+              onTap: () => _showBadgeSheet(context, badge, earned, pct,
+                  badge.measure?.call(progress, courses)),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: earned
+                      ? AppColors.gold.withValues(alpha: 0.16)
+                      : scheme.surface,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: earned ? AppColors.gold : scheme.outline,
+                  ),
+                ),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Center(
+                      child: Icon(
+                        earned ? badge.icon : Icons.lock_outline_rounded,
+                        color:
+                            earned ? AppColors.gold : scheme.onSurfaceVariant,
+                      ),
+                    ),
+                    // A locked badge that is partly done shows a hairline of
+                    // progress along the bottom edge.
+                    if (!earned && pct > 0)
+                      Align(
+                        alignment: Alignment.bottomCenter,
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(8, 0, 8, 6),
+                          child: ArenaProgressBar(
+                              value: pct, height: 3, color: AppColors.gold),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            );
+          }),
+      ],
+    );
+  }
+
+  void _showBadgeSheet(BuildContext context, BadgeSpec badge, bool earned,
+      double pct, (int, int)? measure) {
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) {
+        final textTheme = Theme.of(sheetContext).textTheme;
+        final scheme = Theme.of(sheetContext).colorScheme;
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(24, 4, 24, 36),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: earned
+                      ? AppColors.gold.withValues(alpha: 0.18)
+                      : scheme.surfaceContainerHighest,
+                  border: Border.all(
+                      color: earned ? AppColors.gold : scheme.outline,
+                      width: 2),
+                ),
+                child: Icon(
+                  earned ? badge.icon : Icons.lock_outline_rounded,
+                  size: 34,
+                  color: earned ? AppColors.gold : scheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 14),
+              Text(badge.name, style: textTheme.headlineSmall),
+              const SizedBox(height: 6),
+              Text(
+                badge.description,
+                textAlign: TextAlign.center,
+                style: textTheme.bodyMedium
+                    ?.copyWith(color: scheme.onSurfaceVariant),
+              ),
+              const SizedBox(height: 18),
+              if (earned)
+                const StatChip(
+                    icon: Icons.check_circle_rounded,
+                    label: 'Earned',
+                    color: AppColors.success)
+              else ...[
+                ArenaProgressBar(value: pct, color: AppColors.gold),
+                const SizedBox(height: 8),
+                Text(
+                  measure == null
+                      ? 'Keep playing to unlock'
+                      : '${measure.$1} / ${measure.$2}',
+                  style: textTheme.labelLarge
+                      ?.copyWith(color: scheme.onSurfaceVariant),
+                ),
+              ],
+            ],
+          ),
+        );
+      },
+    );
   }
 }

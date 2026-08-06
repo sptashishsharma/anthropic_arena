@@ -21,7 +21,9 @@ Future<void> guestOnCertTab(WidgetTester tester, {Size? surface}) async {
   await tester.pumpWidget(await wrap(const LoginScreen()));
   await tester.tap(find.text('Play as guest'));
   await pumpFrames(tester);
-  await tester.tap(find.text('Certifications'));
+  // The bottom bar uses the short label ("Certs") so it can't wrap; the full
+  // word only appears in the tab's own heading.
+  await tester.tap(find.text('Certs'));
   await pumpFrames(tester);
 }
 

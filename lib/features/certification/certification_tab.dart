@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/layout.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common.dart';
 import '../../core/widgets/glass.dart';
@@ -52,8 +53,9 @@ class CertificationTab extends ConsumerWidget {
         ),
         data: (list) {
           final grouped = _group(list);
-          return ListView(
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+          return ContentShell(
+            child: ListView(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 96),
             children: [
               Text('Certifications', style: textTheme.headlineMedium),
               const SizedBox(height: 4),
@@ -69,18 +71,22 @@ class CertificationTab extends ConsumerWidget {
                   count: grouped[category]!.length,
                 ),
                 const SizedBox(height: 12),
-                for (final cert in grouped[category]!) ...[
-                  _CertCard(
-                    cert: cert,
-                    best: progress.bestCertAttempt(cert.id),
-                    attempts: progress.certAttemptsFor(cert.id).length,
-                    onTap: () => _showExamSheet(context, cert, progress),
-                  ),
-                  const SizedBox(height: 12),
-                ],
-                const SizedBox(height: 12),
+                ResponsiveCardGrid(
+                  spacing: 12,
+                  children: [
+                    for (final cert in grouped[category]!)
+                      _CertCard(
+                        cert: cert,
+                        best: progress.bestCertAttempt(cert.id),
+                        attempts: progress.certAttemptsFor(cert.id).length,
+                        onTap: () => _showExamSheet(context, cert, progress),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 24),
               ],
             ],
+            ),
           );
         },
       ),

@@ -42,6 +42,8 @@ class ArenaCard extends StatelessWidget {
     // Frosted-glass panel: a translucent tinted fill over a backdrop blur,
     // with a hairline light border. A caller-supplied [borderColor] (e.g. the
     // gold "this is you" highlight) also casts a matching neon glow.
+    // GlassSurface itself supplies the press-scale + haptic for tappable
+    // cards, so every card in the app gets that feedback for free.
     return GlassSurface(
       padding: padding,
       onTap: onTap,
@@ -126,21 +128,33 @@ class StarRow extends StatelessWidget {
   }
 }
 
-/// Circular avatar with the player's initial.
+/// Circular avatar: the identity provider's photo when there is one, falling
+/// back to the player's initial on the gold gradient. A broken/blocked photo
+/// URL silently falls back too, so this never shows a broken image.
 class PlayerAvatar extends StatelessWidget {
-  const PlayerAvatar({super.key, required this.initial, this.size = 44});
+  const PlayerAvatar({
+    super.key,
+    required this.initial,
+    this.size = 44,
+    this.photoUrl,
+    this.ring,
+  });
 
   final String initial;
   final double size;
+  final String? photoUrl;
+
+  /// Optional accent ring drawn around the avatar (rank tier / "this is you").
+  final Color? ring;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final fallback = Container(
       width: size,
       height: size,
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         shape: BoxShape.circle,
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           colors: [AppColors.goldBright, AppColors.gold],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -155,6 +169,37 @@ class PlayerAvatar extends StatelessWidget {
           fontSize: size * 0.42,
         ),
       ),
+    );
+
+    final avatar = photoUrl == null || photoUrl!.isEmpty
+        ? fallback
+        : ClipOval(
+            child: Image.network(
+              photoUrl!,
+              width: size,
+              height: size,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => fallback,
+              loadingBuilder: (context, child, progress) =>
+                  progress == null ? child : fallback,
+            ),
+          );
+
+    if (ring == null) return avatar;
+    return Container(
+      padding: const EdgeInsets.all(2),
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(color: ring!, width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: ring!.withValues(alpha: 0.35),
+            blurRadius: 10,
+            spreadRadius: -2,
+          ),
+        ],
+      ),
+      child: avatar,
     );
   }
 }
@@ -182,6 +227,62 @@ class ArenaProgressBar extends StatelessWidget {
         backgroundColor:
             Theme.of(context).colorScheme.outline.withValues(alpha: 0.5),
         valueColor: AlwaysStoppedAnimation(color),
+      ),
+    );
+  }
+}
+
+/// Placeholder block with a travelling sheen, shown while real content loads
+/// so the first paint has structure instead of a lone spinner.
+class SkeletonBlock extends StatefulWidget {
+  const SkeletonBlock({
+    super.key,
+    this.height = 100,
+    this.width,
+    this.radius = 20,
+  });
+
+  final double height;
+  final double? width;
+  final double radius;
+
+  @override
+  State<SkeletonBlock> createState() => _SkeletonBlockState();
+}
+
+class _SkeletonBlockState extends State<SkeletonBlock>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1400),
+  )..repeat();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final base = scheme.surfaceContainerHighest.withValues(alpha: 0.45);
+    final sheen = scheme.onSurface.withValues(alpha: 0.06);
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, _) => Container(
+        height: widget.height,
+        width: widget.width,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(widget.radius),
+          border: Border.all(color: scheme.outline.withValues(alpha: 0.35)),
+          gradient: LinearGradient(
+            colors: [base, sheen, base],
+            stops: const [0.0, 0.5, 1.0],
+            begin: Alignment(-1.6 + 3.2 * _controller.value, -0.3),
+            end: Alignment(-0.6 + 3.2 * _controller.value, 0.3),
+          ),
+        ),
       ),
     );
   }

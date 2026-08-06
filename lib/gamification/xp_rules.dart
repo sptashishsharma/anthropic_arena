@@ -5,6 +5,10 @@ abstract final class XpRules {
   static const passBonus = 25;
   static const perfectBonus = 50;
 
+  /// XP target for the home screen's daily goal ring. Roughly one passed
+  /// level, so a single short session clears it.
+  static const dailyGoalXp = 100;
+
   /// Stars awarded for a score, given the level's pass mark.
   static int starsFor(int scorePct, int passMark) {
     if (scorePct >= 100) return 3;

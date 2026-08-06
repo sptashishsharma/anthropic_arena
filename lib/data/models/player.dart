@@ -7,6 +7,7 @@ class Player {
     required this.tag,
     required this.provider,
     this.email,
+    this.photoUrl,
     required this.joinedIso,
   });
 
@@ -17,6 +18,10 @@ class Player {
   final String tag;
   final AuthProvider provider;
   final String? email;
+
+  /// Profile picture from the identity provider (Google/Microsoft), when they
+  /// supply one. Null for email/guest accounts, which fall back to the initial.
+  final String? photoUrl;
   final String joinedIso;
 
   String get initial =>
@@ -32,6 +37,7 @@ class Player {
         tag: tag,
         provider: provider,
         email: email,
+        photoUrl: photoUrl,
         joinedIso: joinedIso,
       );
 
@@ -44,6 +50,7 @@ class Player {
           orElse: () => AuthProvider.guest,
         ),
         email: json['email'] as String?,
+        photoUrl: json['photoUrl'] as String?,
         joinedIso: json['joinedIso'] as String? ?? '',
       );
 
@@ -53,6 +60,7 @@ class Player {
         'tag': tag,
         'provider': provider.name,
         'email': email,
+        'photoUrl': photoUrl,
         'joinedIso': joinedIso,
       };
 }

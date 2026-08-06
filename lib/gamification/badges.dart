@@ -10,6 +10,7 @@ class BadgeSpec {
     required this.description,
     required this.icon,
     required this.isEarned,
+    this.measure,
   });
 
   final String id;
@@ -20,6 +21,20 @@ class BadgeSpec {
   /// Whether [progress] satisfies this badge (courses provided for
   /// course-completion checks).
   final bool Function(UserProgress progress, List<Course> courses) isEarned;
+
+  /// Optional "how close am I" reading — (current, target) — so a locked badge
+  /// can show a progress bar instead of just a padlock. Null where progress
+  /// isn't a meaningful count (e.g. a comeback win).
+  final (int, int) Function(UserProgress progress, List<Course> courses)?
+      measure;
+
+  /// 0..1 progress toward earning this badge; 1 once earned.
+  double progressFor(UserProgress progress, List<Course> courses) {
+    if (isEarned(progress, courses)) return 1;
+    final m = measure?.call(progress, courses);
+    if (m == null || m.$2 <= 0) return 0;
+    return (m.$1 / m.$2).clamp(0.0, 1.0);
+  }
 }
 
 /// The full badge catalogue. Evaluated after every finished level.
@@ -31,6 +46,7 @@ abstract final class Badges {
       description: 'Complete your first level',
       icon: Icons.flag_rounded,
       isEarned: (p, _) => p.levelsCompleted >= 1,
+      measure: (p, _) => (p.levelsCompleted, 1),
     ),
     BadgeSpec(
       id: 'perfect-run',
@@ -53,6 +69,7 @@ abstract final class Badges {
       description: 'Reach a 3-day streak',
       icon: Icons.local_fire_department_rounded,
       isEarned: (p, _) => p.streakDays >= 3,
+      measure: (p, _) => (p.streakDays, 3),
     ),
     BadgeSpec(
       id: 'streak-7',
@@ -60,6 +77,7 @@ abstract final class Badges {
       description: 'Reach a 7-day streak',
       icon: Icons.bolt_rounded,
       isEarned: (p, _) => p.streakDays >= 7,
+      measure: (p, _) => (p.streakDays, 7),
     ),
     BadgeSpec(
       id: 'xp-500',
@@ -67,6 +85,7 @@ abstract final class Badges {
       description: 'Earn 500 XP',
       icon: Icons.star_rounded,
       isEarned: (p, _) => p.xp >= 500,
+      measure: (p, _) => (p.xp, 500),
     ),
     BadgeSpec(
       id: 'xp-1500',
@@ -74,6 +93,7 @@ abstract final class Badges {
       description: 'Earn 1,500 XP',
       icon: Icons.military_tech_rounded,
       isEarned: (p, _) => p.xp >= 1500,
+      measure: (p, _) => (p.xp, 1500),
     ),
     BadgeSpec(
       id: 'sharpshooter',
@@ -81,6 +101,7 @@ abstract final class Badges {
       description: 'Answer 50 questions correctly',
       icon: Icons.gps_fixed_rounded,
       isEarned: (p, _) => p.totalCorrect >= 50,
+      measure: (p, _) => (p.totalCorrect, 50),
     ),
     BadgeSpec(
       id: 'course-champion',

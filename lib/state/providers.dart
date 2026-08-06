@@ -111,6 +111,28 @@ final remindersProvider =
     NotifierProvider<RemindersController, bool>(RemindersController.new);
 
 // ---------------------------------------------------------------------------
+// Onboarding
+// ---------------------------------------------------------------------------
+
+/// Whether the intro carousel has already been shown on this device.
+class OnboardingSeenController extends Notifier<bool> {
+  static const _key = 'aa.onboarded';
+
+  @override
+  bool build() => ref.read(prefsProvider).getBool(_key) ?? false;
+
+  Future<void> markSeen() async {
+    state = true;
+    await ref.read(prefsProvider).setBool(_key, true);
+  }
+}
+
+final onboardingSeenProvider =
+    NotifierProvider<OnboardingSeenController, bool>(
+  OnboardingSeenController.new,
+);
+
+// ---------------------------------------------------------------------------
 // Auth
 // ---------------------------------------------------------------------------
 
@@ -135,6 +157,7 @@ class AuthController extends Notifier<Player?> {
     required String name,
     required AuthProvider provider,
     String? email,
+    String? photoUrl,
   }) {
     final player = Player(
       id: id,
@@ -142,6 +165,7 @@ class AuthController extends Notifier<Player?> {
       tag: '#${1000 + (id.hashCode.abs() % 9000)}',
       provider: provider,
       email: email,
+      photoUrl: photoUrl,
       joinedIso: DateTime.now().toIso8601String(),
     );
     ref.read(prefsProvider).setString(_key, jsonEncode(player.toJson()));
@@ -177,7 +201,12 @@ class AuthController extends Notifier<Player?> {
           'name': player.name,
           'tag': player.tag,
           'provider': player.provider.name,
+          if (player.photoUrl != null) 'photoUrl': player.photoUrl,
           'xp': progress.xp,
+          // Rolling 7-day total powers the weekly leaderboard; weekKey lets
+          // readers discard values left over from a previous week.
+          'xpWeek': progress.xpThisWeek,
+          'weekKey': ProgressController.weekKey(DateTime.now()),
           'streakDays': progress.streakDays,
           'levelsCompleted': progress.levelsCompleted,
           'badges': progress.badges.length,
@@ -248,6 +277,7 @@ class AuthController extends Notifier<Player?> {
           name: user.displayName ?? 'Player',
           provider: AuthProvider.google,
           email: user.email,
+          photoUrl: user.photoURL,
         );
         return null;
       } on fb.FirebaseAuthException catch (e) {
@@ -292,6 +322,7 @@ class AuthController extends Notifier<Player?> {
           name: user.displayName ?? email?.split('@').first ?? 'Player',
           provider: AuthProvider.microsoft,
           email: email,
+          photoUrl: user.photoURL,
         );
         return null;
       } on fb.FirebaseAuthException catch (e) {
@@ -400,6 +431,14 @@ class ProgressController extends Notifier<UserProgress> {
     if (raw == null) return const UserProgress();
     return UserProgress.fromJson(
         (jsonDecode(raw) as Map).cast<String, dynamic>());
+  }
+
+  /// ISO-ish week stamp (`2026-W32`) used to expire stale weekly XP totals.
+  static String weekKey(DateTime d) {
+    final startOfYear = DateTime(d.year, 1, 1);
+    final week = ((d.difference(startOfYear).inDays + startOfYear.weekday) / 7)
+        .ceil();
+    return '${d.year}-W${week.toString().padLeft(2, '0')}';
   }
 
   static String dayKey(DateTime d) =>
@@ -605,7 +644,21 @@ final progressProvider = NotifierProvider<ProgressController, UserProgress>(
 // Leaderboard
 // ---------------------------------------------------------------------------
 
-/// Live Firestore standings: top 50 players by XP.
+/// Which standings the Ranking tab is showing.
+enum LeaderboardScope { allTime, week }
+
+final leaderboardScopeProvider =
+    NotifierProvider<LeaderboardScopeController, LeaderboardScope>(
+  LeaderboardScopeController.new,
+);
+
+class LeaderboardScopeController extends Notifier<LeaderboardScope> {
+  @override
+  LeaderboardScope build() => LeaderboardScope.allTime;
+  void set(LeaderboardScope scope) => state = scope;
+}
+
+/// Live Firestore standings: top 50 players by all-time XP.
 final _liveLeaderboardProvider = StreamProvider<List<LeaderboardEntry>>((ref) {
   final player = ref.watch(authProvider);
   return FirebaseFirestore.instance
@@ -619,38 +672,90 @@ final _liveLeaderboardProvider = StreamProvider<List<LeaderboardEntry>>((ref) {
                 name: (doc.data()['name'] as String?) ?? 'Player',
                 tag: (doc.data()['tag'] as String?) ?? '',
                 xp: (doc.data()['xp'] as num?)?.toInt() ?? 0,
+                photoUrl: doc.data()['photoUrl'] as String?,
                 isYou: doc.id == player?.id,
               ),
           ]);
 });
 
-/// What the Ranking tab shows: live standings when Firebase is on,
-/// demo standings otherwise.
+/// Live Firestore standings for the current week. Values written in an earlier
+/// week are dropped client-side rather than needing a composite index.
+final _liveWeeklyLeaderboardProvider =
+    StreamProvider<List<LeaderboardEntry>>((ref) {
+  final player = ref.watch(authProvider);
+  final thisWeek = ProgressController.weekKey(DateTime.now());
+  return FirebaseFirestore.instance
+      .collection('users')
+      .orderBy('xpWeek', descending: true)
+      .limit(50)
+      .snapshots()
+      .map((snap) => [
+            for (final doc in snap.docs)
+              if ((doc.data()['weekKey'] as String?) == thisWeek)
+                LeaderboardEntry(
+                  name: (doc.data()['name'] as String?) ?? 'Player',
+                  tag: (doc.data()['tag'] as String?) ?? '',
+                  xp: (doc.data()['xpWeek'] as num?)?.toInt() ?? 0,
+                  photoUrl: doc.data()['photoUrl'] as String?,
+                  isYou: doc.id == player?.id,
+                ),
+          ]);
+});
+
+/// What the Ranking tab shows: live standings when Firebase is on, demo
+/// standings otherwise. Players who have never scored are filtered out — a
+/// board full of zeroes reads as broken rather than empty.
 final leaderboardProvider = Provider<List<LeaderboardEntry>>((ref) {
   final player = ref.watch(authProvider);
   final progress = ref.watch(progressProvider);
+  final weekly = ref.watch(leaderboardScopeProvider) == LeaderboardScope.week;
   // Guests play but don't compete: rankings list signed-in players only.
   final competing = player != null && player.provider != AuthProvider.guest;
+  final myXp = weekly ? progress.xpThisWeek : progress.xp;
 
-  if (ref.watch(firebaseReadyProvider)) {
-    final live = ref.watch(_liveLeaderboardProvider).value ?? const [];
-    // Make sure the local player is visible even before their first sync.
-    if (competing && !live.any((e) => e.isYou)) {
-      return [
-        ...live,
-        LeaderboardEntry(
-            name: player.name, tag: player.tag, xp: progress.xp, isYou: true),
-      ]..sort((a, b) => b.xp.compareTo(a.xp));
+  List<LeaderboardEntry> finish(List<LeaderboardEntry> entries) {
+    final ranked = entries.where((e) => e.xp > 0).toList();
+    // Always show yourself, even on zero, so the tab never looks empty to a
+    // player who just signed in.
+    if (competing && !ranked.any((e) => e.isYou)) {
+      ranked.add(LeaderboardEntry(
+        name: player.name,
+        tag: player.tag,
+        xp: myXp,
+        photoUrl: player.photoUrl,
+        isYou: true,
+      ));
     }
-    return live;
+    // Sort last: your own row is spliced in above, and sorting before that
+    // would leave you pinned to the bottom whatever your score.
+    ranked.sort((a, b) => b.xp.compareTo(a.xp));
+    return ranked;
   }
 
-  return [
-    ...demoRivals,
-    if (competing)
-      LeaderboardEntry(
-          name: player.name, tag: player.tag, xp: progress.xp, isYou: true),
-  ]..sort((a, b) => b.xp.compareTo(a.xp));
+  if (ref.watch(firebaseReadyProvider)) {
+    final live = (weekly
+            ? ref.watch(_liveWeeklyLeaderboardProvider)
+            : ref.watch(_liveLeaderboardProvider))
+        .value ??
+        const <LeaderboardEntry>[];
+    // Swap in the local figures for your own row: they update the instant a
+    // level ends, before the Firestore round-trip lands.
+    return finish([
+      for (final e in live)
+        if (e.isYou)
+          LeaderboardEntry(
+            name: e.name,
+            tag: e.tag,
+            xp: myXp,
+            photoUrl: player?.photoUrl ?? e.photoUrl,
+            isYou: true,
+          )
+        else
+          e,
+    ]);
+  }
+
+  return finish([...demoRivals]);
 });
 
 /// True when the standings shown are the live global ones.

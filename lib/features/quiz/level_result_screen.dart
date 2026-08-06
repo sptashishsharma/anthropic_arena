@@ -1,5 +1,6 @@
 import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/theme/app_colors.dart';
@@ -9,9 +10,10 @@ import '../../core/widgets/glass.dart';
 import '../../data/models/course.dart';
 import '../../gamification/xp_rules.dart';
 import '../../state/providers.dart';
+import '../share/share_card.dart';
 import 'quiz_screen.dart';
 
-class LevelResultScreen extends StatefulWidget {
+class LevelResultScreen extends ConsumerStatefulWidget {
   const LevelResultScreen({
     super.key,
     required this.course,
@@ -28,11 +30,30 @@ class LevelResultScreen extends StatefulWidget {
   final Map<String, int?> answers;
 
   @override
-  State<LevelResultScreen> createState() => _LevelResultScreenState();
+  ConsumerState<LevelResultScreen> createState() => _LevelResultScreenState();
 }
 
-class _LevelResultScreenState extends State<LevelResultScreen> {
+class _LevelResultScreenState extends ConsumerState<LevelResultScreen> {
   late final ConfettiController _confetti;
+
+  /// Builds a branded PNG of this result and opens the share sheet.
+  Future<void> _share(BuildContext context) async {
+    final o = widget.outcome;
+    final player = ref.read(authProvider);
+    final progress = ref.read(progressProvider);
+    await shareBrag(
+      context,
+      ShareBrag(
+        headline: o.scorePct >= 100 ? 'Perfect run!' : 'Level complete!',
+        subtitle: '${widget.course.title} · ${widget.level.title}',
+        playerName: player?.name ?? 'Player',
+        xp: progress.xp,
+        scorePct: o.scorePct,
+        stars: o.stars,
+        streakDays: progress.streakDays,
+      ),
+    );
+  }
 
   @override
   void initState() {
@@ -166,6 +187,14 @@ class _LevelResultScreenState extends State<LevelResultScreen> {
                         label: const Text('Review answers'),
                         onPressed: () => _showReview(context),
                       ),
+                      if (o.passed) ...[
+                        const SizedBox(height: 10),
+                        OutlinedButton.icon(
+                          icon: const Icon(Icons.ios_share_rounded),
+                          label: const Text('Share result'),
+                          onPressed: () => _share(context),
+                        ),
+                      ],
                       const SizedBox(height: 10),
                       TextButton.icon(
                         icon: const Icon(Icons.replay_rounded),

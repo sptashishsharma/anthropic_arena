@@ -4,12 +4,16 @@ class LeaderboardEntry {
     required this.tag,
     required this.xp,
     this.isYou = false,
+    this.photoUrl,
   });
 
   final String name;
   final String tag;
   final int xp;
   final bool isYou;
+
+  /// Identity-provider avatar, when the player has one.
+  final String? photoUrl;
 }
 
 /// Demo standings shown until the Firestore-backed global leaderboard goes

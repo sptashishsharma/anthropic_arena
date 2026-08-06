@@ -4,12 +4,13 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
+import 'motion.dart';
 
 /// A frosted-glass surface: real backdrop blur, a translucent tinted fill,
 /// a hairline light border and an optional neon glow. This is the building
 /// block for the app's glassmorphism look — drop it in place of a solid
 /// card/panel anywhere.
-class GlassSurface extends StatelessWidget {
+class GlassSurface extends StatefulWidget {
   const GlassSurface({
     super.key,
     required this.child,
@@ -36,7 +37,24 @@ class GlassSurface extends StatelessWidget {
   final Color? fill;
 
   @override
+  State<GlassSurface> createState() => _GlassSurfaceState();
+}
+
+class _GlassSurfaceState extends State<GlassSurface> {
+  bool _pressed = false;
+
+  @override
   Widget build(BuildContext context) {
+    final padding = widget.padding;
+    final radius = widget.radius;
+    final blur = widget.blur;
+    final onTap = widget.onTap;
+    final glow = widget.glow;
+    final glowAlpha = widget.glowAlpha;
+    final borderColor = widget.borderColor;
+    final fill = widget.fill;
+    final child = widget.child;
+
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final shape = BorderRadius.circular(radius);
 
@@ -54,20 +72,32 @@ class GlassSurface extends StatelessWidget {
       child: onTap == null
           ? Padding(padding: padding, child: child)
           : InkWell(
-              onTap: onTap,
+              onTap: () {
+                Haptics.tap();
+                onTap();
+              },
+              // Drives the press-scale from the ink highlight, so the tap is
+              // still handled in exactly one place.
+              onHighlightChanged: (down) {
+                if (down != _pressed) setState(() => _pressed = down);
+              },
               borderRadius: shape,
               child: Padding(padding: padding, child: child),
             ),
     );
 
-    return DecoratedBox(
+    return AnimatedScale(
+      scale: _pressed ? 0.975 : 1,
+      duration: const Duration(milliseconds: 110),
+      curve: Curves.easeOut,
+      child: DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: shape,
         boxShadow: glow == null
             ? null
             : [
                 BoxShadow(
-                  color: glow!.withValues(alpha: glowAlpha),
+                  color: glow.withValues(alpha: glowAlpha),
                   blurRadius: 28,
                   spreadRadius: -3,
                 ),
@@ -90,6 +120,7 @@ class GlassSurface extends StatelessWidget {
             child: content,
           ),
         ),
+      ),
       ),
     );
   }

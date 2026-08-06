@@ -65,8 +65,9 @@ void main() {
     expect(find.byType(HomeShell), findsOneWidget);
 
     // Microsoft is a real (non-guest) account, so the gated Certifications
-    // tab opens its catalogue instead of the sign-in gate.
-    await tester.tap(find.text('Certifications'));
+    // tab opens its catalogue instead of the sign-in gate. The bottom bar
+    // shows the short label so it can't wrap.
+    await tester.tap(find.text('Certs'));
     await pumpFrames(tester);
     expect(find.text('Sign in to unlock Certifications'), findsNothing);
   });
@@ -79,10 +80,53 @@ void main() {
 
     expect(find.byType(HomeShell), findsOneWidget);
     expect(find.text('Learn'), findsOneWidget);
-    expect(find.text('Certifications'), findsOneWidget);
-    expect(find.text('Ranking'), findsOneWidget);
-    expect(find.text('Analysis'), findsOneWidget);
+    // Short label in the bar; "Certifications" in full lives on the tab body,
+    // which is also mounted inside the IndexedStack.
+    expect(find.text('Certs'), findsOneWidget);
+    expect(find.text('Rank'), findsOneWidget);
+    expect(find.text('Stats'), findsOneWidget);
     expect(find.text('Profile'), findsOneWidget);
+  });
+
+  testWidgets('bottom bar uses short labels and shrinks them on small phones',
+      (tester) async {
+    // The bar has 5 slots, so a long word like "Certifications" wrapped onto a
+    // second line ("Certificatio/ns"). Guard the two things that fixed it: the
+    // bar uses short labels, and the label style shrinks on narrow screens.
+    //
+    // This deliberately does NOT assert rendered line counts: flutter_test's
+    // placeholder font is a fixed-width stand-in roughly twice as wide as real
+    // Roboto/Inter, so text-fit measurements here don't reflect the shipped
+    // app. Actual fit is verified visually against a browser build.
+    //
+    // setSurfaceSize resizes layout but leaves MediaQuery reporting the old
+    // size, which would hide width-dependent logic — set the view metrics.
+    tester.view.physicalSize = const Size(320, 800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(await wrap(const LoginScreen()));
+    await tester.tap(find.text('Play as guest'));
+    await pumpFrames(tester);
+
+    // No multi-word or long labels in the bar.
+    for (final label in ['Learn', 'Certs', 'Rank', 'Stats', 'Profile']) {
+      expect(find.text(label), findsOneWidget);
+      expect(label.length, lessThanOrEqualTo(7));
+    }
+    expect(find.text('Certifications'), findsNothing,
+        reason: 'the long form belongs on the tab body, not the bar');
+
+    // And the labels are scaled down at this width.
+    final bar = tester.widget<NavigationBar>(find.byType(NavigationBar));
+    final scaled = bar.labelTextStyle?.resolve({})?.fontSize;
+    final unscaled = Theme.of(tester.element(find.byType(NavigationBar)))
+        .textTheme
+        .labelMedium
+        ?.fontSize;
+    expect(scaled, isNotNull);
+    expect(scaled!, lessThan(unscaled ?? 12));
   });
 
   testWidgets('learning tab lists the bundled courses', (tester) async {

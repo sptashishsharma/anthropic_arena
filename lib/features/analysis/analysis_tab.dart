@@ -2,6 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/layout.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common.dart';
 import '../../data/models/progress.dart';
@@ -45,8 +46,10 @@ class AnalysisTab extends ConsumerWidget {
     }
 
     return SafeArea(
-      child: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+      child: ContentShell(
+        maxWidth: 900,
+        child: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 96),
         children: [
           Text('Personal Analysis', style: textTheme.headlineMedium),
           const SizedBox(height: 16),
@@ -133,6 +136,7 @@ class AnalysisTab extends ConsumerWidget {
             ..._CertificationSection.build(progress, context),
           ],
         ],
+        ),
       ),
     );
   }

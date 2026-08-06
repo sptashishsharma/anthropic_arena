@@ -221,6 +221,30 @@ class UserProgress {
   int get accuracyPct =>
       totalAnswered == 0 ? 0 : (totalCorrect * 100 / totalAnswered).round();
 
+  /// XP earned in the last 7 calendar days (today included) — the figure the
+  /// weekly leaderboard ranks on.
+  int get xpThisWeek {
+    final today = DateTime.now();
+    var sum = 0;
+    for (var back = 0; back < 7; back++) {
+      final d = today.subtract(Duration(days: back));
+      final key = '${d.year.toString().padLeft(4, '0')}-'
+          '${d.month.toString().padLeft(2, '0')}-'
+          '${d.day.toString().padLeft(2, '0')}';
+      sum += xpByDay[key] ?? 0;
+    }
+    return sum;
+  }
+
+  /// XP earned today — drives the daily-goal ring.
+  int get xpToday {
+    final d = DateTime.now();
+    final key = '${d.year.toString().padLeft(4, '0')}-'
+        '${d.month.toString().padLeft(2, '0')}-'
+        '${d.day.toString().padLeft(2, '0')}';
+    return xpByDay[key] ?? 0;
+  }
+
   LevelProgress progressFor(String levelId) =>
       levels[levelId] ?? LevelProgress(levelId: levelId);
 

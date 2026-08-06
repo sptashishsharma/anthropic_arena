@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common.dart';
 import '../../core/widgets/glass.dart';
+import '../../core/widgets/motion.dart';
 import '../../data/models/course.dart';
 import '../../state/providers.dart';
 import 'level_result_screen.dart';
@@ -37,7 +38,12 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
   int? get _selected => _answers[_current.id];
   bool get _isLast => _index == _questions.length - 1;
 
-  void _select(int option) => setState(() => _answers[_current.id] = option);
+  void _select(int option) {
+    // Quiet nudge on pick — the answer isn't revealed here, so it stays
+    // neutral rather than hinting right/wrong.
+    Haptics.tap();
+    setState(() => _answers[_current.id] = option);
+  }
 
   void _goPrevious() {
     if (_index > 0) setState(() => _index--);
@@ -69,6 +75,7 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
           answers: _answers,
           allCourses: courses,
         );
+    outcome.passed ? Haptics.celebrate() : Haptics.failure();
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
         builder: (_) => LevelResultScreen(
