@@ -50,9 +50,25 @@ void main() {
     await tester.pumpWidget(await wrap(const LoginScreen()));
     expect(find.text('Anthropic Arena'), findsOneWidget);
     expect(find.text('Continue with Google'), findsOneWidget);
+    expect(find.text('Continue with Microsoft'), findsOneWidget);
     expect(find.text('Continue with Apple'), findsOneWidget);
     expect(find.text('Continue with Email'), findsOneWidget);
     expect(find.text('Play as guest'), findsOneWidget);
+  });
+
+  testWidgets('Microsoft sign-in enters the arena as a non-guest account',
+      (tester) async {
+    await tester.pumpWidget(await wrap(const LoginScreen()));
+    await tester.tap(find.text('Continue with Microsoft'));
+    await pumpFrames(tester);
+
+    expect(find.byType(HomeShell), findsOneWidget);
+
+    // Microsoft is a real (non-guest) account, so the gated Certifications
+    // tab opens its catalogue instead of the sign-in gate.
+    await tester.tap(find.text('Certifications'));
+    await pumpFrames(tester);
+    expect(find.text('Sign in to unlock Certifications'), findsNothing);
   });
 
   testWidgets('guest sign-in lands on the home shell with 5 tabs',

@@ -23,7 +23,15 @@
       "PowerShell(try { Remove-Item -Recurse -Force \"ios\\\\Flutter\\\\ephemeral\" -ErrorAction Stop } catch { \"cleanup skipped\" }; $env:PATH = \"C:\\\\dev\\\\flutter\\\\bin;$env:PATH\"; flutter build web --release 2>&1 | Select-Object -Last 2; \"=== banner present in built index.html? ===\"; Select-String -Path \"build\\\\web\\\\index.html\" -Pattern \"aa-install|beforeinstallprompt\" | Measure-Object | Select-Object -ExpandProperty Count; \"=== service worker registered by bootstrap? \\(needed for beforeinstallprompt\\) ===\"; Select-String -Path \"build\\\\web\\\\flutter_bootstrap.js\" -Pattern \"serviceWorkerVersion|flutter_service_worker\" -AllMatches | ForEach-Object { $_.Matches.Value } | Select-Object -Unique; \"=== sw file exists? ===\"; Test-Path \"build\\\\web\\\\flutter_service_worker.js\")",
       "PowerShell(\"=== .gitignore ===\"; Get-Content .gitignore; \"=== .claude contents ===\"; Get-ChildItem -Recurse .claude -File | Select-Object -ExpandProperty FullName; \"=== build_bak_bttd03 size ===\"; \"{0:N1} MB\" -f \\(\\(Get-ChildItem -Recurse build_bak_bttd03 -File -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum\\).Sum / 1MB\\); \"=== apkbuild.txt \\(deleted\\) ===\"; git log --oneline -1 -- apkbuild.txt)",
       "PowerShell(\"=== .gitignore diff ===\")",
-      "PowerShell(\"=== .claude/settings.json ===\")"
+      "PowerShell(\"=== .claude/settings.json ===\")",
+      "PowerShell(git config user.name)",
+      "PowerShell(git config user.email)",
+      "PowerShell(git config --global user.name)",
+      "PowerShell(git config --global user.email)",
+      "PowerShell(\"=== existing commit authors ===\")",
+      "PowerShell(\"=== current config ===\")",
+      "PowerShell(\"\\(global\\)\")",
+      "PowerShell($idx = Invoke-WebRequest -Uri \"https://anthropic-arena.web.app/index.html\" -UseBasicParsing; \"index.html Cache-Control: $\\($idx.Headers['Cache-Control']\\)\"; $c = $idx.Content; foreach \\($s in @\\('id=\"aa-install\"','beforeinstallprompt','Install Anthropic Arena','Add to Home Screen','aa.install.dismissed'\\)\\) { \"$\\([bool]\\($c -match [regex]::Escape\\($s\\)\\)\\)`t$s\" }; \"=== manifest + sw + icon reachable ===\"; foreach \\($u in @\\(\"manifest.json\",\"flutter_service_worker.js\",\"icons/Icon-192.png\"\\)\\) { $r = Invoke-WebRequest -Uri \"https://anthropic-arena.web.app/$u\" -Method Head -UseBasicParsing; \"$\\($r.StatusCode\\)`t$u\" })"
     ]
   }
 }

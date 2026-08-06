@@ -78,6 +78,20 @@ class _SignInOptionsState extends ConsumerState<SignInOptions> {
           ),
         ),
         const SizedBox(height: 12),
+        OutlinedButton.icon(
+          style: OutlinedButton.styleFrom(
+            foregroundColor: AppColors.cream,
+            side: const BorderSide(color: AppColors.strokeDark, width: 1.4),
+            minimumSize: const Size.fromHeight(48),
+          ),
+          onPressed: _busy
+              ? null
+              : () =>
+                  _run(() => ref.read(authProvider.notifier).signInMicrosoft()),
+          icon: const MicrosoftLogo(size: 20),
+          label: const Text('Continue with Microsoft'),
+        ),
+        const SizedBox(height: 12),
         FilledButton.icon(
           style: FilledButton.styleFrom(
             backgroundColor: Colors.white,
@@ -128,6 +142,44 @@ class _SignInOptionsState extends ConsumerState<SignInOptions> {
           ),
         ],
       ],
+    );
+  }
+}
+
+/// The Microsoft four-square mark, drawn rather than shipped as an asset so it
+/// stays crisp at any size. Brand colours per Microsoft's logo guidelines.
+class MicrosoftLogo extends StatelessWidget {
+  const MicrosoftLogo({super.key, this.size = 20});
+
+  final double size;
+
+  static const _red = Color(0xFFF25022);
+  static const _green = Color(0xFF7FBA00);
+  static const _blue = Color(0xFF00A4EF);
+  static const _yellow = Color(0xFFFFB900);
+
+  @override
+  Widget build(BuildContext context) {
+    final tile = (size - size * 0.1) / 2;
+    final gap = size * 0.1;
+    Widget square(Color c) => SizedBox(width: tile, height: tile, child: ColoredBox(color: c));
+    return SizedBox(
+      width: size,
+      height: size,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [square(_red), SizedBox(width: gap), square(_green)],
+          ),
+          SizedBox(height: gap),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [square(_blue), SizedBox(width: gap), square(_yellow)],
+          ),
+        ],
+      ),
     );
   }
 }

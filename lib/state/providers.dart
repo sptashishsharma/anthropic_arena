@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../core/auth_config.dart';
 import '../data/certification_repository.dart';
 import '../data/content_repository.dart';
 import '../data/leaderboard.dart';
@@ -257,6 +258,44 @@ class AuthController extends Notifier<Player?> {
     return null;
   }
 
+  /// Microsoft work/school (Entra ID) or personal account. Real popup on web;
+  /// demo account elsewhere until those platforms are registered with Firebase.
+  ///
+  /// Which accounts are accepted is set by [AuthConfig.microsoftTenant] — the
+  /// default lets anyone from any organization in.
+  Future<String?> signInMicrosoft() async {
+    if (_firebase && kIsWeb) {
+      try {
+        final provider = fb.OAuthProvider('microsoft.com')
+          ..setCustomParameters({
+            'tenant': AuthConfig.microsoftTenant,
+            // Always let people choose which work account to use rather than
+            // silently reusing whatever the browser signed in with last.
+            'prompt': 'select_account',
+          });
+        final cred = await fb.FirebaseAuth.instance.signInWithPopup(provider);
+        final user = cred.user!;
+        // Microsoft often leaves the top-level email null and puts the work
+        // address in the raw profile instead.
+        final profile = cred.additionalUserInfo?.profile;
+        final email = user.email ??
+            profile?['mail'] as String? ??
+            profile?['userPrincipalName'] as String?;
+        _store(
+          id: user.uid,
+          name: user.displayName ?? email?.split('@').first ?? 'Player',
+          provider: AuthProvider.microsoft,
+          email: email,
+        );
+        return null;
+      } on fb.FirebaseAuthException catch (e) {
+        return _friendly(e);
+      }
+    }
+    _storeLocal(name: 'Microsoft Player', provider: AuthProvider.microsoft);
+    return null;
+  }
+
   Future<String?> signInDemoApple() async {
     _storeLocal(name: 'Apple Player', provider: AuthProvider.apple);
     return null;
@@ -298,6 +337,13 @@ class AuthController extends Notifier<Player?> {
         'popup-closed-by-user' => 'Sign-in window was closed. Try again.',
         'operation-not-allowed' =>
           'This sign-in method isn\'t enabled in Firebase yet.',
+        'account-exists-with-different-credential' =>
+          'You already have an account with that email — sign in the way you '
+              'did the first time.',
+        'unauthorized-domain' =>
+          'This site isn\'t on the Firebase authorised-domains list yet.',
+        'popup-blocked' =>
+          'Your browser blocked the sign-in window — allow pop-ups and retry.',
         'network-request-failed' => 'No connection — check your internet.',
         _ => 'Sign-in failed (${e.code}). Please try again.',
       };

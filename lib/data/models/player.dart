@@ -1,4 +1,4 @@
-enum AuthProvider { guest, email, google, apple }
+enum AuthProvider { guest, email, google, apple, microsoft }
 
 class Player {
   const Player({

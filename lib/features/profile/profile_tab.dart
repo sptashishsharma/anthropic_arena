@@ -52,12 +52,16 @@ class ProfileTab extends ConsumerWidget {
                       icon: switch (player.provider.name) {
                         'google' => Icons.g_mobiledata_rounded,
                         'apple' => Icons.apple_rounded,
+                        'microsoft' => Icons.window_rounded,
                         'email' => Icons.mail_rounded,
                         _ => Icons.sports_esports_rounded,
                       },
                       label: switch (player.provider.name) {
                         'google' => player.isDemo ? 'Google (demo)' : 'Google',
                         'apple' => player.isDemo ? 'Apple (demo)' : 'Apple',
+                        'microsoft' => player.isDemo
+                            ? 'Microsoft (demo)'
+                            : player.email ?? 'Microsoft',
                         'email' => player.email ?? 'Email',
                         _ => 'Guest player',
                       },
