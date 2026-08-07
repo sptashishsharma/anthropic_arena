@@ -100,7 +100,10 @@ class _HomeShellState extends ConsumerState<HomeShell> {
       // whole window (not just the content pane) so the translucent rail has
       // something dark to sit on.
       return Scaffold(
-        backgroundColor: Colors.transparent,
+        // Theme colour rather than transparent: on web the page behind the
+      // canvas is painted by the browser, and any uncovered strip showed up
+      // as white.
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         body: NeonBackground(
           accent: AppColors.gold,
           child: Row(
@@ -135,7 +138,10 @@ class _HomeShellState extends ConsumerState<HomeShell> {
     final navTheme = Theme.of(context).navigationBarTheme;
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      // Theme colour rather than transparent: on web the page behind the
+      // canvas is painted by the browser, and any uncovered strip showed up
+      // as white.
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: content,
       bottomNavigationBar: NavigationBar(
         selectedIndex: _index,
@@ -198,7 +204,10 @@ class _ArenaRail extends StatelessWidget {
       child: SafeArea(
         right: false,
         child: NavigationRail(
-          backgroundColor: Colors.transparent,
+          // Theme colour rather than transparent: on web the page behind the
+      // canvas is painted by the browser, and any uncovered strip showed up
+      // as white.
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           selectedIndex: index,
           onDestinationSelected: onSelected,
           extended: extended,

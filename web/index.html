@@ -33,6 +33,24 @@
   <title>Anthropic Arena — Learn · Play · Compete</title>
   <link rel="manifest" href="manifest.json">
 
+  <style>
+    /*
+      The page itself must be dark. Flutter's canvas is sized to the visual
+      viewport, which on mobile browsers changes as the address bar collapses
+      and during overscroll — any moment the canvas doesn't cover the page,
+      the browser paints the default WHITE body behind it, which looked like
+      a broken half-dark screen. Painting html/body in the brand ink makes
+      those gaps invisible.
+    */
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background-color: #0A0C10;
+      overscroll-behavior: none;
+    }
+  </style>
+
   <!--
     Install prompt. Chrome/Edge fire `beforeinstallprompt` only once per page
     load and only while the app is installable, so the listener has to be

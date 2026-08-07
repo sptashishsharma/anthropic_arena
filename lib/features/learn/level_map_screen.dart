@@ -28,7 +28,10 @@ class LevelMapScreen extends ConsumerWidget {
 
     return Scaffold(
       extendBodyBehindAppBar: true,
-      backgroundColor: Colors.transparent,
+      // Not transparent: a short course (2 levels) leaves the map shorter than
+      // the screen, and a transparent scaffold let the page background show
+      // through as a white band under the map.
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         title: Column(
@@ -47,15 +50,27 @@ class LevelMapScreen extends ConsumerWidget {
         accent: course.color,
         child: SafeArea(
           bottom: false,
-          child: SingleChildScrollView(
-            padding: EdgeInsets.fromLTRB(0, kToolbarHeight + 12, 0, 40),
-            child: _LevelPath(
-              course: course,
-              starsFor: (level) => progress.progressFor(level.id).stars,
-              isPassed: (level) => progress.progressFor(level.id).passed,
-              isUnlocked: (level) => controller.isUnlocked(course, level),
-              onTapLevel: (level) =>
-                  _showLevelSheet(context, ref, course, level),
+          child: LayoutBuilder(
+            builder: (context, constraints) => SingleChildScrollView(
+              padding: EdgeInsets.fromLTRB(0, kToolbarHeight + 12, 0, 40),
+              // Short courses (2 levels) otherwise leave the map floating in
+              // the top third of the screen; stretch to at least a full
+              // viewport so the path is centred in real estate it fills.
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: constraints.maxHeight - kToolbarHeight - 52,
+                ),
+                child: Center(
+                  child: _LevelPath(
+                    course: course,
+                    starsFor: (level) => progress.progressFor(level.id).stars,
+                    isPassed: (level) => progress.progressFor(level.id).passed,
+                    isUnlocked: (level) => controller.isUnlocked(course, level),
+                    onTapLevel: (level) =>
+                        _showLevelSheet(context, ref, course, level),
+                  ),
+                ),
+              ),
             ),
           ),
         ),
