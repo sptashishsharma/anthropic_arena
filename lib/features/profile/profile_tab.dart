@@ -80,6 +80,9 @@ class ProfileTab extends ConsumerWidget {
                         'email' => player.email ?? 'Email',
                         _ => 'Guest player',
                       },
+                      // Long work addresses get truncated in the chip; the
+                      // tooltip keeps the full value one long-press away.
+                      tooltip: player.email,
                       color: AppColors.info,
                     ),
                   ],

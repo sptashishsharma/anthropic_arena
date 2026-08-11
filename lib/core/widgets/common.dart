@@ -63,14 +63,25 @@ class StatChip extends StatelessWidget {
     required this.icon,
     required this.label,
     this.color = AppColors.gold,
+    this.tooltip,
   });
 
   final IconData icon;
   final String label;
   final Color color;
 
+  /// Shown on hover/long-press. Worth setting wherever [label] can be
+  /// truncated (e.g. a long work email) so the full value stays reachable.
+  final String? tooltip;
+
   @override
   Widget build(BuildContext context) {
+    final chip = _build(context);
+    if (tooltip == null) return chip;
+    return Tooltip(message: tooltip!, child: chip);
+  }
+
+  Widget _build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
       decoration: BoxDecoration(
@@ -90,12 +101,19 @@ class StatChip extends StatelessWidget {
         children: [
           Icon(icon, size: 16, color: color),
           const SizedBox(width: 6),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.w700,
-                ),
+          // Flexible + ellipsis: long values (work email addresses especially)
+          // otherwise force the chip wider than its parent and spill off the
+          // edge of the screen.
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    color: color,
+                    fontWeight: FontWeight.w700,
+                  ),
+            ),
           ),
         ],
       ),
